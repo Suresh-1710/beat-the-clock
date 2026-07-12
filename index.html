@@ -71,26 +71,26 @@
 
     <div class="section-label">ringtone</div>
     <div class="ringtone-row" id="ringtoneRow">
-      <button class="ringtone-btn active" data-tone="siren" onclick="selectTone(this)">
+      <div class="ringtone-btn active" data-tone="siren" role="button" tabindex="0" onclick="selectTone(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectTone(this);}">
         <span class="rt-icon">🚨</span>
         <span>Siren</span>
         <button class="rt-preview-btn" onclick="previewTone('siren',event)">▶</button>
-      </button>
-      <button class="ringtone-btn" data-tone="digital" onclick="selectTone(this)">
+      </div>
+      <div class="ringtone-btn" data-tone="digital" role="button" tabindex="0" onclick="selectTone(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectTone(this);}">
         <span class="rt-icon">📟</span>
         <span>Digital</span>
         <button class="rt-preview-btn" onclick="previewTone('digital',event)">▶</button>
-      </button>
-      <button class="ringtone-btn" data-tone="classic" onclick="selectTone(this)">
+      </div>
+      <div class="ringtone-btn" data-tone="classic" role="button" tabindex="0" onclick="selectTone(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectTone(this);}">
         <span class="rt-icon">🔔</span>
         <span>Classic Bell</span>
         <button class="rt-preview-btn" onclick="previewTone('classic',event)">▶</button>
-      </button>
-      <button class="ringtone-btn" data-tone="buzzer" onclick="selectTone(this)">
+      </div>
+      <div class="ringtone-btn" data-tone="buzzer" role="button" tabindex="0" onclick="selectTone(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectTone(this);}">
         <span class="rt-icon">📢</span>
         <span>Loud Buzzer</span>
         <button class="rt-preview-btn" onclick="previewTone('buzzer',event)">▶</button>
-      </button>
+      </div>
     </div>
 
     <div class="section-label">select game</div>
