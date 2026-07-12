@@ -1,0 +1,24 @@
+{
+  "name": "Beat the Clock",
+  "short_name": "BeatClock",
+  "description": "A game-based alarm clock: wake up and play to turn it off!",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#07050f",
+  "theme_color": "#7c6cfc",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icon-1.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-2.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

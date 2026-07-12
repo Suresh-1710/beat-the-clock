@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Beat the Clock</title>
+<link rel="manifest" href="manifest.json" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<link rel="apple-touch-icon" href="icon-1.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Courier+Prime:wght@700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body class="has-banner">
+
+<!-- ── AUDIO UNLOCK BANNER ── -->
+<div id="audioUnlockBanner" class="unlock-banner">
+  <span>⚠️ Click anywhere on screen to activate alarm audio</span>
+</div>
+
+<div class="main-wrap">
+
+  <!-- ── HEADER CARD ── -->
+  <div class="card">
+    <div class="logo">
+      <div class="logo-icon">⏰</div>
+      <div class="logo-titles">
+        <div class="logo-name">Beat the <span>Clock</span></div>
+        <div class="logo-tagline">snake alarm · wake up or lose</div>
+      </div>
+    </div>
+    <div id="liveClock">00:00:00</div>
+    <div id="liveDate">loading...</div>
+
+    <div id="statusPill">
+      <span class="dot" id="statusDot"></span>
+      <span id="statusText">no alarms active</span>
+    </div>
+  </div>
+
+  <!-- ── ADD ALARM CARD ── -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">add alarm</span>
+    </div>
+
+    <div class="add-alarm-row">
+      <div class="custom-time-picker">
+        <select id="alarmHour" class="time-select"></select>
+        <span class="colon">:</span>
+        <select id="alarmMinute" class="time-select"></select>
+        <div class="ampm-toggle">
+          <button type="button" class="ampm-btn active" id="ampmAM" onclick="setAMPM('AM')">AM</button>
+          <button type="button" class="ampm-btn" id="ampmPM" onclick="setAMPM('PM')">PM</button>
+        </div>
+      </div>
+      <button class="btn-sm btn-sm-accent" onclick="addAlarm()">+ Add</button>
+    </div>
+
+    <div class="section-label">Frequency</div>
+    <div class="freq-row" id="freqRow">
+      <button type="button" class="freq-btn active" data-freq="once" onclick="selectFrequency(this)">
+        <span>🎯 Once</span>
+      </button>
+      <button type="button" class="freq-btn" data-freq="daily" onclick="selectFrequency(this)">
+        <span>🔁 Daily</span>
+      </button>
+    </div>
+
+    <div class="section-label">ringtone</div>
+    <div class="ringtone-row" id="ringtoneRow">
+      <button class="ringtone-btn active" data-tone="siren" onclick="selectTone(this)">
+        <span class="rt-icon">🚨</span>
+        <span>Siren</span>
+        <button class="rt-preview-btn" onclick="previewTone('siren',event)">▶</button>
+      </button>
+      <button class="ringtone-btn" data-tone="digital" onclick="selectTone(this)">
+        <span class="rt-icon">📟</span>
+        <span>Digital</span>
+        <button class="rt-preview-btn" onclick="previewTone('digital',event)">▶</button>
+      </button>
+      <button class="ringtone-btn" data-tone="classic" onclick="selectTone(this)">
+        <span class="rt-icon">🔔</span>
+        <span>Classic Bell</span>
+        <button class="rt-preview-btn" onclick="previewTone('classic',event)">▶</button>
+      </button>
+      <button class="ringtone-btn" data-tone="buzzer" onclick="selectTone(this)">
+        <span class="rt-icon">📢</span>
+        <span>Loud Buzzer</span>
+        <button class="rt-preview-btn" onclick="previewTone('buzzer',event)">▶</button>
+      </button>
+    </div>
+
+    <div class="section-label">select game</div>
+    <div class="game-select-row" id="gameSelectRow">
+      <button class="game-btn active" data-game="snake" onclick="selectGame(this)">
+        <span class="g-icon">🐍</span>
+        <span>Snake Game</span>
+      </button>
+      <button class="game-btn" data-game="sudoku" onclick="selectGame(this)">
+        <span class="g-icon">🔢</span>
+        <span>Sudoku</span>
+      </button>
+      <button class="game-btn" data-game="memory" onclick="selectGame(this)">
+        <span class="g-icon">🧠</span>
+        <span>Memory Match</span>
+      </button>
+      <button class="game-btn" data-game="math" onclick="selectGame(this)">
+        <span class="g-icon">🧮</span>
+        <span>Math Puzzle</span>
+      </button>
+    </div>
+
+    <div id="countdown"></div>
+  </div>
+
+  <!-- ── ALARMS LIST CARD ── -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">your alarms</span>
+      <button class="btn-sm btn-sm-ghost" onclick="clearAllAlarms()">Clear all</button>
+    </div>
+    <div class="alarm-list" id="alarmList">
+      <div class="empty-alarms">no alarms yet — add one above ☝️</div>
+    </div>
+  </div>
+
+</div><!-- end main-wrap -->
+
+<!-- ── GAME OVERLAY ── -->
+<div id="overlay">
+  <div class="alarm-banner">
+    <span class="banner-icon">⏰</span>
+    <div class="banner-text">
+      <h3 id="overlayTitle">wake up! beat the clock!</h3>
+      <p>score 10 points to silence the alarm</p>
+    </div>
+  </div>
+
+  <div class="score-strip">
+    <div class="metric"><div class="metric-label">score</div><div class="metric-value accent" id="scoreVal">0</div></div>
+    <div class="metric"><div class="metric-label">best</div><div class="metric-value" id="bestVal">0</div></div>
+    <div class="metric"><div class="metric-label">lives</div><div class="metric-value" id="livesVal">♥♥♥</div></div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-header">
+      <span id="progressLabel">score: 0 / 10</span>
+      <span id="progressPct">0%</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  </div>
+
+  <canvas id="gameCanvas"></canvas>
+
+  <!-- ── SUDOKU GRID ── -->
+  <div id="sudokuContainer" style="display: none;">
+    <div class="sudoku-grid" id="sudokuGrid"></div>
+    <div class="sudoku-numpad">
+      <button class="numpad-btn" onclick="pressSudokuNum(1)">1</button>
+      <button class="numpad-btn" onclick="pressSudokuNum(2)">2</button>
+      <button class="numpad-btn" onclick="pressSudokuNum(3)">3</button>
+      <button class="numpad-btn" onclick="pressSudokuNum(4)">4</button>
+      <button class="numpad-btn" onclick="pressSudokuNum(5)">5</button>
+      <button class="numpad-btn" onclick="pressSudokuNum(6)">6</button>
+      <button class="numpad-btn" onclick="pressSudokuNum(7)">7</button>
+      <button class="numpad-btn" onclick="pressSudokuNum(8)">8</button>
+      <button class="numpad-btn" onclick="pressSudokuNum(9)">9</button>
+      <button class="numpad-btn clear" onclick="pressSudokuNum(0)">✕</button>
+    </div>
+  </div>
+
+  <!-- ── MEMORY MATCH GRID ── -->
+  <div id="memoryContainer" style="display: none;">
+    <div class="memory-grid" id="memoryGrid"></div>
+  </div>
+
+  <!-- ── MATH PUZZLE CONTAINER ── -->
+  <div id="mathContainer" style="display: none;">
+    <div class="math-question-box">
+      <div id="mathQuestion">12 × 7</div>
+      <input type="number" id="mathAnswer" placeholder="?" autocomplete="off" onkeydown="if(event.key === 'Enter') submitMathAnswer()" />
+      <button class="btn btn-primary" onclick="submitMathAnswer()" style="margin-top: 10px;">Submit</button>
+    </div>
+    <div class="math-timer-track">
+      <div id="mathTimerFill" class="math-timer-fill" style="width: 100%;"></div>
+    </div>
+  </div>
+
+  <div id="gameMessage">get ready...</div>
+
+  <div class="dpad-grid">
+    <button class="dpad-btn up"    onclick="dpad('UP')"    aria-label="up"   >▲</button>
+    <button class="dpad-btn left"  onclick="dpad('LEFT')"  aria-label="left" >◀</button>
+    <button class="dpad-btn down"  onclick="dpad('DOWN')"  aria-label="down" >▼</button>
+    <button class="dpad-btn right" onclick="dpad('RIGHT')" aria-label="right">▶</button>
+  </div>
+  <p class="hint">arrow keys / WASD · swipe on canvas · eat 10 🍎 to dismiss</p>
+</div>
+
+<!-- ── WIN SCREEN ── -->
+<div id="winScreen">
+  <div class="win-emoji">🎉</div>
+  <div class="win-title">you're awake!</div>
+  <div class="win-sub">alarm dismissed. have a great day!</div>
+  <div class="win-stat" id="winStat"></div>
+</div>
+
+<!-- ── ALARM AUDIO ELEMENT ── -->
+<audio id="alarmAudio" loop preload="auto" style="display: none;">
+  <source src="https://assets.mixkit.co/active_storage/sfx/911/911-84.wav" type="audio/wav">
+</audio>
+
+<script src="app.js" defer></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('service-worker.js')
+        .then(reg => console.log('Service Worker registered successfully with scope:', reg.scope))
+        .catch(err => console.error('Service Worker registration failed:', err));
+    });
+  }
+</script>
+</body>
+</html>
