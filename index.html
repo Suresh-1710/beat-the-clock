@@ -23,7 +23,12 @@
 <div class="main-wrap">
 
   <!-- ── HEADER CARD ── -->
-  <div class="card">
+  <div class="card" style="position: relative;">
+    <!-- ── TOP-RIGHT CORNER DOWNLOAD BUTTON ── -->
+    <a href="beat-the-clock.apk" class="btn-sm btn-sm-accent" style="position: absolute; top: 1.8rem; right: 1.8rem; text-decoration: none; display: flex; align-items: center; gap: 6px; font-size: 11px; padding: 6px 12px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 229, 160, 0.25);" download>
+      <span>🤖 Install APK</span>
+    </a>
+
     <div class="logo">
       <div class="logo-icon">⏰</div>
       <div class="logo-titles">
@@ -38,11 +43,6 @@
       <span class="dot" id="statusDot"></span>
       <span id="statusText">no alarms active</span>
     </div>
-
-    <!-- ── DOWNLOAD BUTTON LINK ── -->
-    <a href="beat-the-clock.apk" class="btn btn-primary" style="margin-top: 15px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; box-sizing: border-box;" download>
-      <span>🤖 Download Android App (.APK)</span>
-    </a>
   </div>
 
   <!-- ── ADD ALARM CARD ── -->
