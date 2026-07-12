@@ -701,14 +701,16 @@ function loadAlarms() {
 
 
 function deleteAlarm(id) {
-  alarms = alarms.filter(a => a.id !== id);
+  const idStr = String(id);
+  alarms = alarms.filter(a => String(a.id) !== idStr);
   saveAlarms();
   renderAlarms();
   if (alarms.length === 0) stopAlarmChecks();
 }
 
 function toggleAlarm(id, checked) {
-  const a = alarms.find(a => a.id === id);
+  const idStr = String(id);
+  const a = alarms.find(a => String(a.id) === idStr);
   if (a) { 
     a.enabled = checked; 
     saveAlarms();
