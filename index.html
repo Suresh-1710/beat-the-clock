@@ -98,6 +98,22 @@
         <span>Loud Buzzer</span>
         <button class="rt-preview-btn" onclick="previewTone('buzzer',event)">▶</button>
       </div>
+
+      <!-- ── DYNAMIC CUSTOM TONE BUTTON (Hidden until file uploaded) ── -->
+      <div class="ringtone-btn" id="customToneBtn" data-tone="custom" role="button" tabindex="0" onclick="selectTone(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectTone(this);}" style="display: none;">
+        <span class="rt-icon">🎼</span>
+        <span id="customToneLabel" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 90px;">My Song</span>
+        <button class="rt-preview-btn" onclick="previewTone('custom',event)">▶</button>
+      </div>
+
+      <!-- ── ADD SONG TRIGGER BUTTON ── -->
+      <div class="ringtone-btn" id="addCustomToneBtn" role="button" tabindex="0" onclick="document.getElementById('customToneInput').click()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();document.getElementById('customToneInput').click();}" style="color: var(--accent); border-color: rgba(0, 229, 160, 0.2);">
+        <span class="rt-icon">🎵</span>
+        <span>+ Add Song</span>
+      </div>
+
+      <!-- Hidden File Input -->
+      <input type="file" id="customToneInput" accept="audio/*" style="display: none;" onchange="handleCustomToneUpload(event)" />
     </div>
 
     <div class="section-label">select game</div>

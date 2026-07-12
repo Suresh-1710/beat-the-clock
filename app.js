@@ -118,6 +118,99 @@ function unlockAudio() {
 document.addEventListener('click', unlockAudio);
 document.addEventListener('touchstart', unlockAudio);
 
+/* ════════════════════════════════════
+   INDEXEDDB FOR CUSTOM RINGTONES
+════════════════════════════════════ */
+const DB_NAME = 'BeatTheClockDB';
+const STORE_NAME = 'audioStore';
+const TONE_KEY = 'custom_ringtone';
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, 1);
+    request.onupgradeneeded = event => {
+      const db = event.target.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME);
+      }
+    };
+    request.onsuccess = event => resolve(event.target.result);
+    request.onerror = event => reject(event.target.error);
+  });
+}
+
+async function saveCustomAudio(file) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(STORE_NAME, 'readwrite');
+    const store = transaction.objectStore(STORE_NAME);
+    const data = {
+      name: file.name,
+      type: file.type,
+      blob: file
+    };
+    const request = store.put(data, TONE_KEY);
+    request.onsuccess = () => resolve();
+    request.onerror = event => reject(event.target.error);
+  });
+}
+
+async function getCustomAudio() {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(STORE_NAME, 'readonly');
+    const store = transaction.objectStore(STORE_NAME);
+    const request = store.get(TONE_KEY);
+    request.onsuccess = event => resolve(event.target.result);
+    request.onerror = event => reject(event.target.error);
+  });
+}
+
+async function handleCustomToneUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  if (!file.type.startsWith('audio/')) {
+    alert('Please select a valid audio file (e.g. mp3, wav, ogg)');
+    return;
+  }
+
+  try {
+    await saveCustomAudio(file);
+    console.log('[Custom Tone] Saved song:', file.name);
+
+    showCustomToneButton(file.name);
+    
+    // Auto-select the custom tone button
+    const btn = document.getElementById('customToneBtn');
+    if (btn) selectTone(btn);
+  } catch (err) {
+    console.error('[Custom Tone] Failed to save custom audio:', err);
+    alert('Failed to save the song file. Please try again.');
+  }
+}
+
+function showCustomToneButton(fileName) {
+  const btn = document.getElementById('customToneBtn');
+  const label = document.getElementById('customToneLabel');
+  if (btn && label) {
+    label.textContent = fileName;
+    btn.style.display = 'flex';
+  }
+}
+
+async function loadCustomTone() {
+  try {
+    const data = await getCustomAudio();
+    if (data && data.name) {
+      showCustomToneButton(data.name);
+      console.log('[Custom Tone] Loaded saved song:', data.name);
+    }
+  } catch (err) {
+    console.warn('[Custom Tone] No saved song found in IndexedDB:', err);
+  }
+}
+
 function selectGame(btn) {
   document.querySelectorAll('.game-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
@@ -275,7 +368,9 @@ function playTone(name, ctx, vol) {
   return fn(ctx, ctx.currentTime, vol);
 }
 
-function startAlarm(toneName) {
+let customToneObjectUrl = null;
+
+async function startAlarm(toneName) {
   stopAlarm();
   isAlarmRinging = true;
   
@@ -283,27 +378,52 @@ function startAlarm(toneName) {
   if (audioEl) {
     audioEl.volume = 1.0; // Enforce maximum volume
     audioEl.currentTime = 0;
+    
+    if (toneName === 'custom') {
+      try {
+        const data = await getCustomAudio();
+        if (data && data.blob) {
+          if (customToneObjectUrl) {
+            URL.revokeObjectURL(customToneObjectUrl);
+          }
+          customToneObjectUrl = URL.createObjectURL(data.blob);
+          audioEl.src = customToneObjectUrl;
+          audioEl.loop = true;
+        } else {
+          audioEl.src = 'https://assets.mixkit.co/active_storage/sfx/911/911-84.wav';
+        }
+      } catch (err) {
+        console.error('[Alarm] Failed to load custom audio Blob:', err);
+        audioEl.src = 'https://assets.mixkit.co/active_storage/sfx/911/911-84.wav';
+      }
+    } else {
+      audioEl.src = 'https://assets.mixkit.co/active_storage/sfx/911/911-84.wav';
+    }
+
     audioEl.play().catch(err => {
       console.warn("Autoplay policy blocked initial playback. Will play on first user interaction.", err);
     });
   }
 
-  alarmAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  
-  // Enforce audio state
-  alarmAudioCtx.onstatechange = () => {
-    if (alarmAudioCtx && alarmAudioCtx.state === 'suspended' && isAlarmRinging) {
-      alarmAudioCtx.resume().catch(e => console.warn('Enforcing resume:', e));
-    }
-  };
+  if (toneName !== 'custom') {
+    alarmAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    // Enforce audio state
+    alarmAudioCtx.onstatechange = () => {
+      if (alarmAudioCtx && alarmAudioCtx.state === 'suspended' && isAlarmRinging) {
+        alarmAudioCtx.resume().catch(e => console.warn('Enforcing resume:', e));
+      }
+    };
 
-  function loop() {
-    if (!alarmAudioCtx) return;
-    const delay = playTone(toneName, alarmAudioCtx, 1.0);
-    alarmLoopTimer = setTimeout(loop, delay);
+    function loop() {
+      if (!alarmAudioCtx) return;
+      const delay = playTone(toneName, alarmAudioCtx, 1.0);
+      alarmLoopTimer = setTimeout(loop, delay);
+    }
+    loop();
   }
-  loop();
 }
+
 function stopAlarm() {
   isAlarmRinging = false;
   releaseWakeLock();
@@ -315,19 +435,61 @@ function stopAlarm() {
   const audioEl = document.getElementById('alarmAudio');
   if (audioEl) {
     audioEl.pause();
+    audioEl.src = '';
+  }
+
+  if (customToneObjectUrl) {
+    URL.revokeObjectURL(customToneObjectUrl);
+    customToneObjectUrl = null;
   }
 }
 
-function previewTone(name, e) {
+let previewAudioEl = null;
+
+async function previewTone(name, e) {
   e.stopPropagation();
   clearTimeout(previewTimer);
-  if (previewCtx) { try { previewCtx.close(); } catch(ex){} previewCtx = null; }
-  previewCtx = new (window.AudioContext || window.webkitAudioContext)();
-  playTone(name, previewCtx, 0.6);
-  previewTimer = setTimeout(() => {
-    if (previewCtx) { try { previewCtx.close(); } catch(ex){} previewCtx = null; }
-  }, 2000);
+  
+  if (previewAudioEl) {
+    try { previewAudioEl.pause(); } catch(ex){}
+    previewAudioEl = null;
+  }
+  if (previewCtx) { 
+    try { previewCtx.close(); } catch(ex){} 
+    previewCtx = null; 
+  }
+
+  if (name === 'custom') {
+    try {
+      const data = await getCustomAudio();
+      if (!data || !data.blob) {
+        alert('Please add a song first using the "+ Add Song" button!');
+        return;
+      }
+      const audioUrl = URL.createObjectURL(data.blob);
+      previewAudioEl = new Audio(audioUrl);
+      previewAudioEl.volume = 0.6;
+      previewAudioEl.play().catch(err => console.warn('[Preview] Failed to play custom audio:', err));
+      
+      previewTimer = setTimeout(() => {
+        if (previewAudioEl) {
+          try { previewAudioEl.pause(); } catch(ex){}
+          previewAudioEl = null;
+        }
+        URL.revokeObjectURL(audioUrl);
+      }, 2000);
+    } catch (err) {
+      console.error('[Preview] Failed to load custom audio:', err);
+    }
+  } else {
+    previewCtx = new (window.AudioContext || window.webkitAudioContext)();
+    playTone(name, previewCtx, 0.6);
+    previewTimer = setTimeout(() => {
+      if (previewCtx) { try { previewCtx.close(); } catch(ex){} previewCtx = null; }
+    }, 2000);
+  }
 }
+
 
 function selectTone(btn) {
   document.querySelectorAll('.ringtone-btn').forEach(b => b.classList.remove('active'));
@@ -1249,8 +1411,14 @@ function checkAppMode() {
     }
   }
 }
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', checkAppMode);
-} else {
+
+function initApp() {
   checkAppMode();
+  loadCustomTone();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
 }
