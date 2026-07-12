@@ -1236,3 +1236,21 @@ document.addEventListener('visibilitychange', () => {
     }
   }
 });
+
+// Hide download button if running as installed PWA or native app wrapper
+function checkAppMode() {
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+  const isCapacitor = window.Capacitor !== undefined;
+  
+  if (isStandalone || isCapacitor) {
+    const downloadBtn = document.getElementById('apkDownloadBtn');
+    if (downloadBtn) {
+      downloadBtn.style.display = 'none';
+    }
+  }
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', checkAppMode);
+} else {
+  checkAppMode();
+}
