@@ -178,12 +178,7 @@ async function handleCustomToneUpload(event) {
   try {
     await saveCustomAudio(file);
     console.log('[Custom Tone] Saved song:', file.name);
-
     showCustomToneButton(file.name);
-    
-    // Auto-select the custom tone button
-    const btn = document.getElementById('customToneBtn');
-    if (btn) selectTone(btn);
   } catch (err) {
     console.error('[Custom Tone] Failed to save custom audio:', err);
     alert('Failed to save the song file. Please try again.');
@@ -191,11 +186,12 @@ async function handleCustomToneUpload(event) {
 }
 
 function showCustomToneButton(fileName) {
-  const btn = document.getElementById('customToneBtn');
-  const label = document.getElementById('customToneLabel');
-  if (btn && label) {
-    label.textContent = fileName;
-    btn.style.display = 'flex';
+  const customOpt = document.getElementById('modalCustomRingtoneOpt');
+  const ringtoneSelect = document.getElementById('modalRingtone');
+  if (customOpt && ringtoneSelect) {
+    customOpt.textContent = `🎼 Custom: ${fileName}`;
+    customOpt.style.display = 'block';
+    ringtoneSelect.value = 'custom';
   }
 }
 
@@ -211,27 +207,147 @@ async function loadCustomTone() {
   }
 }
 
-function selectGame(btn) {
-  document.querySelectorAll('.game-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  selectedGame = btn.dataset.game;
+/* ════════════════════════════════════
+   ADD ALARM MODAL LOGIC
+════════════════════════════════════ */
+function openAddAlarmModal() {
+  resetModalTimePicker();
+  
+  // Clear modal inputs
+  document.getElementById('modalLabel').value = '';
+  document.getElementById('modalVibrate').checked = true;
+  document.getElementById('modalDeleteAfterRing').checked = false;
+  
+  // Default values for select dropdowns
+  document.getElementById('modalRingtone').value = 'siren';
+  document.getElementById('modalGame').value = 'snake';
+  document.getElementById('modalRepeat').value = 'once';
+  
+  // If custom audio exists, default to custom!
+  const customOpt = document.getElementById('modalCustomRingtoneOpt');
+  if (customOpt && customOpt.style.display !== 'none') {
+    document.getElementById('modalRingtone').value = 'custom';
+  }
+
+  const modal = document.getElementById('addAlarmModal');
+  if (modal) {
+    modal.classList.add('active');
+  }
+  updateModalTimeNotice();
 }
 
-function setAMPM(val) {
-  selectedAMPM = val;
-  document.getElementById('ampmAM').classList.toggle('active', val === 'AM');
-  document.getElementById('ampmPM').classList.toggle('active', val === 'PM');
+function closeAddAlarmModal() {
+  const modal = document.getElementById('addAlarmModal');
+  if (modal) {
+    modal.classList.remove('active');
+  }
 }
 
-function selectFrequency(btn) {
-  document.querySelectorAll('.freq-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  selectedFreq = btn.dataset.freq;
+function toggleSwitch(id) {
+  const cb = document.getElementById(id);
+  if (cb) {
+    cb.checked = !cb.checked;
+  }
+  updateModalTimeNotice();
+}
+
+function handleModalRingtoneChange(selectEl) {
+  if (selectEl.value === 'add_song') {
+    document.getElementById('customToneInput').click();
+    
+    // Default back to custom option if uploaded, or siren
+    const customOpt = document.getElementById('modalCustomRingtoneOpt');
+    if (customOpt && customOpt.style.display !== 'none') {
+      selectEl.value = 'custom';
+    } else {
+      selectEl.value = 'siren';
+    }
+  }
+}
+
+function updateModalTimeNotice() {
+  const hVal = parseInt(document.getElementById('modalHour').value, 10);
+  const mVal = parseInt(document.getElementById('modalMinute').value, 10);
+  const ampmVal = document.getElementById('modalAMPM').value;
+  const noticeEl = document.getElementById('modalAlarmDelayNotice');
+  if (!noticeEl || isNaN(hVal) || isNaN(mVal)) return;
+
+  let targetHour = hVal;
+  if (ampmVal === 'PM' && targetHour < 12) targetHour += 12;
+  if (ampmVal === 'AM' && targetHour === 12) targetHour = 0;
+
+  const now = new Date();
+  const target = new Date(now);
+  target.setHours(targetHour, mVal, 0, 0);
+
+  if (target <= now) {
+    target.setDate(target.getDate() + 1);
+  }
+
+  const diffMs = target - now;
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffMins = Math.ceil((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+  let timeString = '';
+  if (diffHours > 0) {
+    timeString += `${diffHours} hour${diffHours > 1 ? 's' : ''} `;
+  }
+  timeString += `${diffMins} minute${diffMins > 1 ? 's' : ''}`;
+
+  noticeEl.textContent = `Alarm in ${timeString}`;
+}
+
+function saveNewAlarmFromModal() {
+  const hVal = parseInt(document.getElementById('modalHour').value, 10);
+  const mVal = parseInt(document.getElementById('modalMinute').value, 10);
+  const ampmVal = document.getElementById('modalAMPM').value;
+  const toneVal = document.getElementById('modalRingtone').value;
+  const gameVal = document.getElementById('modalGame').value;
+  const repeatVal = document.getElementById('modalRepeat').value;
+  const vibrateVal = document.getElementById('modalVibrate').checked;
+  const deleteAfterRingVal = document.getElementById('modalDeleteAfterRing').checked;
+  const labelVal = document.getElementById('modalLabel').value.trim() || 'Alarm';
+
+  if (isNaN(hVal) || isNaN(mVal)) {
+    alert('Please select a valid time.');
+    return;
+  }
+
+  // Convert to 24-hour format string for checking logic
+  let targetHour = hVal;
+  if (ampmVal === 'PM' && targetHour < 12) targetHour += 12;
+  if (ampmVal === 'AM' && targetHour === 12) targetHour = 0;
+  const time24h = `${String(targetHour).padStart(2, '0')}:${String(mVal).padStart(2, '0')}`;
+
+  const id = Date.now().toString();
+  const timeStr = `${String(hVal).padStart(2, '0')}:${String(mVal).padStart(2, '0')} ${ampmVal}`;
+
+  const newAlarmObj = {
+    id: id,
+    time: time24h,
+    hour: hVal,
+    minute: mVal,
+    ampm: ampmVal,
+    tone: toneVal,
+    game: gameVal,
+    freq: repeatVal,
+    enabled: true,
+    label: labelVal,
+    vibrate: vibrateVal,
+    deleteAfterRing: deleteAfterRingVal,
+    timeStr: timeStr,
+    ringing: false
+  };
+
+  alarms.push(newAlarmObj);
+  saveAlarms();
+  renderAlarms();
+  closeAddAlarmModal();
 }
 
 function initTimePickers() {
-  const hourSelect = document.getElementById('alarmHour');
-  const minSelect = document.getElementById('alarmMinute');
+  const hourSelect = document.getElementById('modalHour');
+  const minSelect = document.getElementById('modalMinute');
   if (!hourSelect || !minSelect) return;
   
   hourSelect.innerHTML = '';
@@ -251,17 +367,32 @@ function initTimePickers() {
     minSelect.appendChild(opt);
   }
   
+  resetModalTimePicker();
+}
+
+function resetModalTimePicker() {
+  const hourSelect = document.getElementById('modalHour');
+  const minSelect = document.getElementById('modalMinute');
+  const ampmSelect = document.getElementById('modalAMPM');
+  if (!hourSelect || !minSelect || !ampmSelect) return;
+  
   const now = new Date();
   let currentHour = now.getHours();
-  let currentMin = String(now.getMinutes()).padStart(2, '0');
-  let currentAMPM = currentHour >= 12 ? 'PM' : 'AM';
+  let currentMin = now.getMinutes() + 1; // Default to 1 minute from now
+  if (currentMin >= 60) {
+    currentMin = 0;
+    currentHour++;
+  }
   
+  let currentAMPM = currentHour >= 12 ? 'PM' : 'AM';
   currentHour = currentHour % 12;
   if (currentHour === 0) currentHour = 12;
   
   hourSelect.value = currentHour;
-  minSelect.value = currentMin;
-  setAMPM(currentAMPM);
+  minSelect.value = String(currentMin).padStart(2, '0');
+  ampmSelect.value = currentAMPM;
+  
+  updateModalTimeNotice();
 }
 
 const TONES = {
@@ -368,6 +499,28 @@ function playTone(name, ctx, vol) {
   return fn(ctx, ctx.currentTime, vol);
 }
 
+/* Vibration loop helpers */
+let vibrationInterval = null;
+
+function startVibration() {
+  if (navigator.vibrate) {
+    vibrationInterval = setInterval(() => {
+      navigator.vibrate(500);
+    }, 1000);
+    navigator.vibrate(500);
+  }
+}
+
+function stopVibration() {
+  if (vibrationInterval) {
+    clearInterval(vibrationInterval);
+    vibrationInterval = null;
+  }
+  if (navigator.vibrate) {
+    navigator.vibrate(0);
+  }
+}
+
 let customToneObjectUrl = null;
 
 async function startAlarm(toneName) {
@@ -441,6 +594,24 @@ function stopAlarm() {
   if (customToneObjectUrl) {
     URL.revokeObjectURL(customToneObjectUrl);
     customToneObjectUrl = null;
+  }
+
+  // Stop vibration
+  stopVibration();
+
+  // Handle post-ringing lifecycle: auto-delete or once-off disabling
+  if (currentAlarmObj) {
+    if (currentAlarmObj.deleteAfterRing) {
+      alarms = alarms.filter(a => a.id !== currentAlarmObj.id);
+    } else if (currentAlarmObj.freq === 'once') {
+      const alarmToDisable = alarms.find(a => a.id === currentAlarmObj.id);
+      if (alarmToDisable) {
+        alarmToDisable.enabled = false;
+      }
+    }
+    saveAlarms();
+    renderAlarms();
+    currentAlarmObj = null;
   }
 }
 
@@ -588,14 +759,34 @@ function clearAllAlarms() {
 
 function renderAlarms() {
   const list = document.getElementById('alarmList');
+  const emptyContainer = document.getElementById('emptyAlarmsContainer');
+  const fabBtn = document.getElementById('fabAddAlarmBtn');
+
+  // Toggle FAB vs Center Add container dynamically
   if (!alarms.length) {
-    list.innerHTML = '<div class="empty-alarms">no alarms yet — add one above ☝️</div>';
+    if (emptyContainer) emptyContainer.style.display = 'flex';
+    if (fabBtn) fabBtn.style.display = 'none';
+    if (list) {
+      list.innerHTML = '<div class="empty-alarms">no alarms active — tap above to add one ➕</div>';
+    }
     return;
+  } else {
+    if (emptyContainer) emptyContainer.style.display = 'none';
+    if (fabBtn) fabBtn.style.display = 'block';
   }
+
+  if (!list) return;
+
   list.innerHTML = alarms.map(a => {
-    const toneLabel = { siren:'🚨 Siren', digital:'📟 Digital', classic:'🔔 Classic Bell', buzzer:'📢 Loud Buzzer' }[a.tone] || a.tone;
+    let toneLabel = { siren:'🚨 Siren', digital:'📟 Digital', classic:'🔔 Classic Bell', buzzer:'📢 Loud Buzzer' }[a.tone];
+    if (a.tone === 'custom') {
+      toneLabel = '🎼 Custom Song';
+    } else if (!toneLabel) {
+      toneLabel = a.tone || '🚨 Siren';
+    }
+    
     const gameLabel = a.game === 'sudoku' ? '🔢 Sudoku' : (a.game === 'memory' ? '🧠 Memory Match' : (a.game === 'math' ? '🧮 Math Puzzle' : '🐍 Snake'));
-    const freqLabel = a.frequency === 'daily' ? '🔁 Daily' : '🎯 Once';
+    const freqLabel = a.freq === 'daily' ? '🔁 Daily' : '🎯 Once';
     const cdText = a.enabled ? getCountdownText(a.time) : 'disabled';
     
     const parts = a.time.split(':');
@@ -605,10 +796,12 @@ function renderAlarms() {
     let h12 = h24 % 12;
     if (h12 === 0) h12 = 12;
     const displayTime = `${String(h12).padStart(2, '0')}:${m} ${ampm}`;
+    const alarmLabel = a.label || 'Alarm';
     
     return `<div class="alarm-item ${a.enabled ? 'enabled' : ''} ${a.ringing ? 'ringing-item' : ''}" id="item-${a.id}">
       <div class="alarm-time-lbl" style="font-size: 18px; min-width: 95px;">${displayTime}</div>
       <div class="alarm-meta">
+        <span class="alarm-title-lbl" style="font-weight: 700; color: var(--text); font-size: 13px; display: block; margin-bottom: 2px;">${alarmLabel}</span>
         <span class="alarm-ringtone-lbl">${toneLabel} · ${gameLabel} · ${freqLabel}</span>
         <span class="alarm-countdown-lbl">${cdText}</span>
       </div>
@@ -705,6 +898,10 @@ function triggerAlarm(alarmObj) {
   setGlobalStatus('ringing', `alarm! ${alarmObj.time}`);
   startAlarm(alarmObj.tone);
   showOverlay(alarmObj);
+
+  if (alarmObj.vibrate) {
+    startVibration();
+  }
 
   // Activate Wake Lock and Fullscreen immediately if possible
   requestWakeLock();

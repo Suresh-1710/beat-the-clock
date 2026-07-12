@@ -47,97 +47,14 @@
     </div>
   </div>
 
-  <!-- ── ADD ALARM CARD ── -->
-  <div class="card">
-    <div class="card-header">
-      <span class="card-title">add alarm</span>
-    </div>
-
-    <div class="add-alarm-row">
-      <div class="custom-time-picker">
-        <select id="alarmHour" class="time-select"></select>
-        <span class="colon">:</span>
-        <select id="alarmMinute" class="time-select"></select>
-        <div class="ampm-toggle">
-          <button type="button" class="ampm-btn active" id="ampmAM" onclick="setAMPM('AM')">AM</button>
-          <button type="button" class="ampm-btn" id="ampmPM" onclick="setAMPM('PM')">PM</button>
-        </div>
-      </div>
-      <button class="btn-sm btn-sm-accent" onclick="addAlarm()">+ Add</button>
-    </div>
-
-    <div class="section-label">Frequency</div>
-    <div class="freq-row" id="freqRow">
-      <button type="button" class="freq-btn active" data-freq="once" onclick="selectFrequency(this)">
-        <span>🎯 Once</span>
-      </button>
-      <button type="button" class="freq-btn" data-freq="daily" onclick="selectFrequency(this)">
-        <span>🔁 Daily</span>
-      </button>
-    </div>
-
-    <div class="section-label">ringtone</div>
-    <div class="ringtone-row" id="ringtoneRow">
-      <div class="ringtone-btn active" data-tone="siren" role="button" tabindex="0" onclick="selectTone(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectTone(this);}">
-        <span class="rt-icon">🚨</span>
-        <span>Siren</span>
-        <button class="rt-preview-btn" onclick="previewTone('siren',event)">▶</button>
-      </div>
-      <div class="ringtone-btn" data-tone="digital" role="button" tabindex="0" onclick="selectTone(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectTone(this);}">
-        <span class="rt-icon">📟</span>
-        <span>Digital</span>
-        <button class="rt-preview-btn" onclick="previewTone('digital',event)">▶</button>
-      </div>
-      <div class="ringtone-btn" data-tone="classic" role="button" tabindex="0" onclick="selectTone(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectTone(this);}">
-        <span class="rt-icon">🔔</span>
-        <span>Classic Bell</span>
-        <button class="rt-preview-btn" onclick="previewTone('classic',event)">▶</button>
-      </div>
-      <div class="ringtone-btn" data-tone="buzzer" role="button" tabindex="0" onclick="selectTone(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectTone(this);}">
-        <span class="rt-icon">📢</span>
-        <span>Loud Buzzer</span>
-        <button class="rt-preview-btn" onclick="previewTone('buzzer',event)">▶</button>
-      </div>
-
-      <!-- ── DYNAMIC CUSTOM TONE BUTTON (Hidden until file uploaded) ── -->
-      <div class="ringtone-btn" id="customToneBtn" data-tone="custom" role="button" tabindex="0" onclick="selectTone(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectTone(this);}" style="display: none;">
-        <span class="rt-icon">🎼</span>
-        <span id="customToneLabel" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 90px;">My Song</span>
-        <button class="rt-preview-btn" onclick="previewTone('custom',event)">▶</button>
-      </div>
-
-      <!-- ── ADD SONG TRIGGER BUTTON ── -->
-      <div class="ringtone-btn" id="addCustomToneBtn" role="button" tabindex="0" onclick="document.getElementById('customToneInput').click()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();document.getElementById('customToneInput').click();}" style="color: var(--accent); border-color: rgba(0, 229, 160, 0.2);">
-        <span class="rt-icon">🎵</span>
-        <span>+ Add Song</span>
-      </div>
-
-      <!-- Hidden File Input -->
-      <input type="file" id="customToneInput" accept="audio/*" style="display: none;" onchange="handleCustomToneUpload(event)" />
-    </div>
-
-    <div class="section-label">select game</div>
-    <div class="game-select-row" id="gameSelectRow">
-      <button class="game-btn active" data-game="snake" onclick="selectGame(this)">
-        <span class="g-icon">🐍</span>
-        <span>Snake Game</span>
-      </button>
-      <button class="game-btn" data-game="sudoku" onclick="selectGame(this)">
-        <span class="g-icon">🔢</span>
-        <span>Sudoku</span>
-      </button>
-      <button class="game-btn" data-game="memory" onclick="selectGame(this)">
-        <span class="g-icon">🧠</span>
-        <span>Memory Match</span>
-      </button>
-      <button class="game-btn" data-game="math" onclick="selectGame(this)">
-        <span class="g-icon">🧮</span>
-        <span>Math Puzzle</span>
-      </button>
-    </div>
-
-    <div id="countdown"></div>
+  <!-- ── EMPTY ALARM CENTER TRIGGER ── -->
+  <div id="emptyAlarmsContainer" class="center-add-container" onclick="openAddAlarmModal()" style="display: none;">
+    <div class="center-add-icon">➕</div>
+    <div class="center-add-text">No alarms active<br><span style="font-size: 11px; opacity: 0.6; font-weight: normal; margin-top: 4px; display: inline-block;">Tap here to set your first wake-up check</span></div>
   </div>
+
+  <!-- ── FLOATING ACTION BUTTON ── -->
+  <button id="fabAddAlarmBtn" class="fab-btn" onclick="openAddAlarmModal()" style="display: none;">+</button>
 
   <!-- ── ALARMS LIST CARD ── -->
   <div class="card">
@@ -228,6 +145,137 @@
   <div class="win-sub">alarm dismissed. have a great day!</div>
   <div class="win-stat" id="winStat"></div>
 </div>
+
+<!-- ── ADD ALARM MODAL OVERLAY ── -->
+<div id="addAlarmModal" class="modal-overlay">
+  <div class="modal-content-wrap">
+    
+    <!-- Header bar -->
+    <div class="modal-header-bar">
+      <button class="modal-btn-icon" onclick="closeAddAlarmModal()" title="Cancel">✕</button>
+      <div class="modal-header-titles">
+        <div class="modal-header-title">Add alarm</div>
+        <div id="modalAlarmDelayNotice" class="modal-header-subtitle">Alarm in 0 hours 0 minutes</div>
+      </div>
+      <button class="modal-btn-icon confirm-btn" onclick="saveNewAlarmFromModal()" title="Save">✓</button>
+    </div>
+
+    <!-- Scrollable Time Picker Wheel -->
+    <div class="modal-time-picker">
+      <div class="picker-column">
+        <div class="picker-label">AM/PM</div>
+        <select id="modalAMPM" class="picker-wheel-select" onchange="updateModalTimeNotice()">
+          <option value="AM">AM</option>
+          <option value="PM">PM</option>
+        </select>
+      </div>
+      <div class="picker-column">
+        <div class="picker-label">Hour</div>
+        <select id="modalHour" class="picker-wheel-select" onchange="updateModalTimeNotice()"></select>
+      </div>
+      <div class="picker-column">
+        <div class="picker-label">Minute</div>
+        <select id="modalMinute" class="picker-wheel-select" onchange="updateModalTimeNotice()"></select>
+      </div>
+    </div>
+
+    <!-- Options List -->
+    <div class="modal-settings-list">
+      <!-- Ringtone select -->
+      <div class="setting-row">
+        <div class="setting-left">
+          <div class="setting-label">Ringtone</div>
+          <div class="setting-desc">Choose alarm ringtone sound</div>
+        </div>
+        <div class="setting-right">
+          <select id="modalRingtone" onchange="handleModalRingtoneChange(this)">
+            <option value="siren">🚨 Siren</option>
+            <option value="digital">📟 Digital</option>
+            <option value="classic">🔔 Classic Bell</option>
+            <option value="buzzer">📢 Loud Buzzer</option>
+            <option value="custom" id="modalCustomRingtoneOpt" style="display: none;">🎼 Custom Song</option>
+            <option value="add_song">🎵 + Add Song</option>
+          </select>
+          <span class="setting-chevron">›</span>
+        </div>
+      </div>
+
+      <!-- Challenge Game -->
+      <div class="setting-row">
+        <div class="setting-left">
+          <div class="setting-label">Challenge Game</div>
+          <div class="setting-desc">Select game to turn off alarm</div>
+        </div>
+        <div class="setting-right">
+          <select id="modalGame">
+            <option value="snake">🐍 Snake Game</option>
+            <option value="sudoku">🔢 Sudoku</option>
+            <option value="memory">🧠 Memory Match</option>
+            <option value="math">🧮 Math Puzzle</option>
+          </select>
+          <span class="setting-chevron">›</span>
+        </div>
+      </div>
+
+      <!-- Frequency / Repeat -->
+      <div class="setting-row">
+        <div class="setting-left">
+          <div class="setting-label">Repeat</div>
+          <div class="setting-desc">Set frequency repetition</div>
+        </div>
+        <div class="setting-right">
+          <select id="modalRepeat">
+            <option value="once">🎯 Once</option>
+            <option value="daily">🔁 Daily</option>
+          </select>
+          <span class="setting-chevron">›</span>
+        </div>
+      </div>
+
+      <!-- Vibrate Toggle -->
+      <div class="setting-row" onclick="toggleSwitch('modalVibrate')">
+        <div class="setting-left">
+          <div class="setting-label">Vibrate when alarm sounds</div>
+          <div class="setting-desc">Pulsate phone vibration motor</div>
+        </div>
+        <div class="setting-right" onclick="event.stopPropagation()">
+          <label class="switch">
+            <input type="checkbox" id="modalVibrate" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Delete Toggle -->
+      <div class="setting-row" onclick="toggleSwitch('modalDeleteAfterRing')">
+        <div class="setting-left">
+          <div class="setting-label">Delete after alarm goes off</div>
+          <div class="setting-desc">Automatically delete once completed</div>
+        </div>
+        <div class="setting-right" onclick="event.stopPropagation()">
+          <label class="switch">
+            <input type="checkbox" id="modalDeleteAfterRing">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Label text input -->
+      <div class="setting-row" style="cursor: default;">
+        <div class="setting-left">
+          <div class="setting-label">Label</div>
+          <div class="setting-desc">Give your alarm a name</div>
+        </div>
+        <div class="setting-right">
+          <input type="text" id="modalLabel" class="setting-input" placeholder="Enter label" maxlength="20">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Hidden File Input -->
+<input type="file" id="customToneInput" accept="audio/*" style="display: none;" onchange="handleCustomToneUpload(event)" />
 
 <!-- ── ALARM AUDIO ELEMENT ── -->
 <audio id="alarmAudio" loop preload="auto" style="display: none;">
