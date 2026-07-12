@@ -342,6 +342,7 @@ function saveNewAlarmFromModal() {
   alarms.push(newAlarmObj);
   saveAlarms();
   renderAlarms();
+  startAlarmChecks();
   closeAddAlarmModal();
 }
 
@@ -697,39 +698,7 @@ function loadAlarms() {
   }
 }
 
-function addAlarm() {
-  const hourSelect = document.getElementById('alarmHour');
-  const minSelect = document.getElementById('alarmMinute');
-  if (!hourSelect || !minSelect) return;
-  
-  const hour = hourSelect.value;
-  const minute = minSelect.value;
-  const ampm = selectedAMPM;
-  const frequency = selectedFreq;
-  
-  let h = parseInt(hour, 10);
-  if (ampm === 'PM' && h < 12) h += 12;
-  if (ampm === 'AM' && h === 12) h = 0;
-  const val = `${String(h).padStart(2, '0')}:${minute}`;
-  
-  if (alarms.find(a => a.time === val && a.tone === selectedTone && a.game === selectedGame && a.frequency === frequency)) {
-    alert('this alarm already exists'); return;
-  }
-  const id = Date.now();
-  alarms.push({ 
-    id, 
-    time: val, 
-    tone: selectedTone, 
-    game: selectedGame, 
-    frequency: frequency, 
-    enabled: true, 
-    ringing: false,
-    lastTriggeredDate: ''
-  });
-  saveAlarms();
-  renderAlarms();
-  startAlarmChecks();
-}
+
 
 function deleteAlarm(id) {
   alarms = alarms.filter(a => a.id !== id);
