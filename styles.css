@@ -934,7 +934,7 @@ body:not(.has-banner) {
   background: var(--surface);
   width: 100%;
   max-width: 440px;
-  height: 100%;
+  height: auto; /* Shrinks to fit content on desktop */
   max-height: 90vh;
   border-radius: 16px;
   border: 1px solid var(--border);
@@ -952,6 +952,7 @@ body:not(.has-banner) {
 
 @media (max-width: 480px) {
   .modal-content-wrap {
+    height: 100vh; /* Full screen on mobile */
     max-height: 100vh;
     border-radius: 0;
     border: none;
