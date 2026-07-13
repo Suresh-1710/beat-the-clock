@@ -187,12 +187,12 @@ async function handleCustomToneUpload(event) {
 
 function showCustomToneButton(fileName) {
   const customOpt = document.getElementById('modalCustomRingtoneOpt');
-  const ringtoneSelect = document.getElementById('modalRingtone');
-  if (customOpt && ringtoneSelect) {
+  if (customOpt) {
     customOpt.textContent = `🎼 Custom: ${fileName}`;
     customOpt.style.display = 'block';
-    ringtoneSelect.value = 'custom';
   }
+  // Automatically select the custom song when uploaded successfully
+  selectCustomOption('ringtoneSelectWrapper', 'custom', `🎼 Custom: ${fileName}`);
 }
 
 async function loadCustomTone() {
@@ -208,8 +208,64 @@ async function loadCustomTone() {
 }
 
 /* ════════════════════════════════════
-   ADD ALARM MODAL LOGIC
+   ADD ALARM MODAL LOGIC (CUSTOM SELECT)
 ════════════════════════════════════ */
+let modalSelectedTone = 'siren';
+let modalSelectedGame = 'snake';
+let modalSelectedRepeat = 'once';
+
+function toggleCustomSelect(wrapperId) {
+  // Close any other custom dropdowns
+  document.querySelectorAll('.custom-select-wrapper').forEach(w => {
+    if (w.id !== wrapperId) {
+      w.classList.remove('open');
+    }
+  });
+
+  const wrapper = document.getElementById(wrapperId);
+  if (wrapper) {
+    wrapper.classList.toggle('open');
+  }
+}
+
+function selectCustomOption(wrapperId, value, labelText) {
+  const wrapper = document.getElementById(wrapperId);
+  if (!wrapper) return;
+
+  if (wrapperId === 'ringtoneSelectWrapper' && value === 'add_song') {
+    document.getElementById('customToneInput').click();
+    wrapper.classList.remove('open');
+    return;
+  }
+
+  // Update selected highlight class
+  wrapper.querySelectorAll('.custom-option').forEach(opt => {
+    opt.classList.toggle('selected', opt.dataset.value === value);
+  });
+
+  // Save selection value to local module state
+  if (wrapperId === 'ringtoneSelectWrapper') {
+    modalSelectedTone = value;
+    document.getElementById('ringtoneSelectedVal').innerHTML = labelText;
+  } else if (wrapperId === 'gameSelectWrapper') {
+    modalSelectedGame = value;
+    document.getElementById('gameSelectedVal').innerHTML = labelText;
+  } else if (wrapperId === 'repeatSelectWrapper') {
+    modalSelectedRepeat = value;
+    document.getElementById('repeatSelectedVal').innerHTML = labelText;
+  }
+
+  wrapper.classList.remove('open');
+  updateModalTimeNotice();
+}
+
+// Global click handler to close dropdowns if clicked outside
+window.addEventListener('click', (e) => {
+  if (!e.target.closest('.custom-select-wrapper')) {
+    document.querySelectorAll('.custom-select-wrapper').forEach(w => w.classList.remove('open'));
+  }
+});
+
 function openAddAlarmModal() {
   resetModalTimePicker();
   
@@ -218,16 +274,21 @@ function openAddAlarmModal() {
   document.getElementById('modalVibrate').checked = true;
   document.getElementById('modalDeleteAfterRing').checked = false;
   
-  // Default values for select dropdowns
-  document.getElementById('modalRingtone').value = 'siren';
-  document.getElementById('modalGame').value = 'snake';
-  document.getElementById('modalRepeat').value = 'once';
-  
-  // If custom audio exists, default to custom!
+  // Default values
+  modalSelectedTone = 'siren';
+  modalSelectedGame = 'snake';
+  modalSelectedRepeat = 'once';
+
   const customOpt = document.getElementById('modalCustomRingtoneOpt');
   if (customOpt && customOpt.style.display !== 'none') {
-    document.getElementById('modalRingtone').value = 'custom';
+    modalSelectedTone = 'custom';
   }
+
+  // Sync custom dropdown selections to default display
+  const toneLabel = modalSelectedTone === 'custom' ? customOpt.textContent : '🚨 Siren';
+  selectCustomOption('ringtoneSelectWrapper', modalSelectedTone, toneLabel);
+  selectCustomOption('gameSelectWrapper', 'snake', '🐍 Snake Game');
+  selectCustomOption('repeatSelectWrapper', 'once', '🎯 Once');
 
   const modal = document.getElementById('addAlarmModal');
   if (modal) {
@@ -249,20 +310,6 @@ function toggleSwitch(id) {
     cb.checked = !cb.checked;
   }
   updateModalTimeNotice();
-}
-
-function handleModalRingtoneChange(selectEl) {
-  if (selectEl.value === 'add_song') {
-    document.getElementById('customToneInput').click();
-    
-    // Default back to custom option if uploaded, or siren
-    const customOpt = document.getElementById('modalCustomRingtoneOpt');
-    if (customOpt && customOpt.style.display !== 'none') {
-      selectEl.value = 'custom';
-    } else {
-      selectEl.value = 'siren';
-    }
-  }
 }
 
 function updateModalTimeNotice() {
@@ -301,9 +348,9 @@ function saveNewAlarmFromModal() {
   const hVal = parseInt(document.getElementById('modalHour').value, 10);
   const mVal = parseInt(document.getElementById('modalMinute').value, 10);
   const ampmVal = document.getElementById('modalAMPM').value;
-  const toneVal = document.getElementById('modalRingtone').value;
-  const gameVal = document.getElementById('modalGame').value;
-  const repeatVal = document.getElementById('modalRepeat').value;
+  const toneVal = modalSelectedTone;
+  const gameVal = modalSelectedGame;
+  const repeatVal = modalSelectedRepeat;
   const vibrateVal = document.getElementById('modalVibrate').checked;
   const deleteAfterRingVal = document.getElementById('modalDeleteAfterRing').checked;
   const labelVal = document.getElementById('modalLabel').value.trim() || 'Alarm';

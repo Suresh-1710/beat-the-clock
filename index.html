@@ -182,53 +182,68 @@
     <!-- Options List -->
     <div class="modal-settings-list">
       <!-- Ringtone select -->
-      <div class="setting-row">
+      <div class="setting-row" style="overflow: visible;">
         <div class="setting-left">
           <div class="setting-label">Ringtone</div>
           <div class="setting-desc">Choose alarm ringtone sound</div>
         </div>
-        <div class="setting-right">
-          <select id="modalRingtone" onchange="handleModalRingtoneChange(this)">
-            <option value="siren">🚨 Siren</option>
-            <option value="digital">📟 Digital</option>
-            <option value="classic">🔔 Classic Bell</option>
-            <option value="buzzer">📢 Loud Buzzer</option>
-            <option value="custom" id="modalCustomRingtoneOpt" style="display: none;">🎼 Custom Song</option>
-            <option value="add_song">🎵 + Add Song</option>
-          </select>
-          <span class="setting-chevron">›</span>
+        <div class="setting-right" onclick="event.stopPropagation()">
+          <div class="custom-select-wrapper" id="ringtoneSelectWrapper">
+            <div class="custom-select-trigger" onclick="toggleCustomSelect('ringtoneSelectWrapper')">
+              <span id="ringtoneSelectedVal">🚨 Siren</span>
+              <span class="chevron">▼</span>
+            </div>
+            <div class="custom-select-options">
+              <div class="custom-option selected" data-value="siren" onclick="selectCustomOption('ringtoneSelectWrapper', 'siren', '🚨 Siren')">🚨 Siren</div>
+              <div class="custom-option" data-value="digital" onclick="selectCustomOption('ringtoneSelectWrapper', 'digital', '📟 Digital')">📟 Digital</div>
+              <div class="custom-option" data-value="classic" onclick="selectCustomOption('ringtoneSelectWrapper', 'classic', '🔔 Classic Bell')">🔔 Classic Bell</div>
+              <div class="custom-option" data-value="buzzer" onclick="selectCustomOption('ringtoneSelectWrapper', 'buzzer', '📢 Loud Buzzer')">📢 Loud Buzzer</div>
+              <div class="custom-option" id="modalCustomRingtoneOpt" data-value="custom" onclick="selectCustomOption('ringtoneSelectWrapper', 'custom', '🎼 Custom Song')" style="display: none;">🎼 Custom Song</div>
+              <div class="custom-option" data-value="add_song" onclick="selectCustomOption('ringtoneSelectWrapper', 'add_song', '🎵 + Add Song')" style="border-top: 1px solid var(--border); color: var(--accent); font-weight: bold;">🎵 + Add Song</div>
+            </div>
+          </div>
         </div>
       </div>
 
       <!-- Challenge Game -->
-      <div class="setting-row">
+      <div class="setting-row" style="overflow: visible;">
         <div class="setting-left">
           <div class="setting-label">Challenge Game</div>
           <div class="setting-desc">Select game to turn off alarm</div>
         </div>
-        <div class="setting-right">
-          <select id="modalGame">
-            <option value="snake">🐍 Snake Game</option>
-            <option value="sudoku">🔢 Sudoku</option>
-            <option value="memory">🧠 Memory Match</option>
-            <option value="math">🧮 Math Puzzle</option>
-          </select>
-          <span class="setting-chevron">›</span>
+        <div class="setting-right" onclick="event.stopPropagation()">
+          <div class="custom-select-wrapper" id="gameSelectWrapper">
+            <div class="custom-select-trigger" onclick="toggleCustomSelect('gameSelectWrapper')">
+              <span id="gameSelectedVal">🐍 Snake Game</span>
+              <span class="chevron">▼</span>
+            </div>
+            <div class="custom-select-options">
+              <div class="custom-option selected" data-value="snake" onclick="selectCustomOption('gameSelectWrapper', 'snake', '🐍 Snake Game')">🐍 Snake Game</div>
+              <div class="custom-option" data-value="sudoku" onclick="selectCustomOption('gameSelectWrapper', 'sudoku', '🔢 Sudoku')">🔢 Sudoku</div>
+              <div class="custom-option" data-value="memory" onclick="selectCustomOption('gameSelectWrapper', 'memory', '🧠 Memory Match')">🧠 Memory Match</div>
+              <div class="custom-option" data-value="math" onclick="selectCustomOption('gameSelectWrapper', 'math', '🧮 Math Puzzle')">🧮 Math Puzzle</div>
+            </div>
+          </div>
         </div>
       </div>
 
       <!-- Frequency / Repeat -->
-      <div class="setting-row">
+      <div class="setting-row" style="overflow: visible;">
         <div class="setting-left">
           <div class="setting-label">Repeat</div>
           <div class="setting-desc">Set frequency repetition</div>
         </div>
-        <div class="setting-right">
-          <select id="modalRepeat">
-            <option value="once">🎯 Once</option>
-            <option value="daily">🔁 Daily</option>
-          </select>
-          <span class="setting-chevron">›</span>
+        <div class="setting-right" onclick="event.stopPropagation()">
+          <div class="custom-select-wrapper" id="repeatSelectWrapper">
+            <div class="custom-select-trigger" onclick="toggleCustomSelect('repeatSelectWrapper')">
+              <span id="repeatSelectedVal">🎯 Once</span>
+              <span class="chevron">▼</span>
+            </div>
+            <div class="custom-select-options">
+              <div class="custom-option selected" data-value="once" onclick="selectCustomOption('repeatSelectWrapper', 'once', '🎯 Once')">🎯 Once</div>
+              <div class="custom-option" data-value="daily" onclick="selectCustomOption('repeatSelectWrapper', 'daily', '🔁 Daily')">🔁 Daily</div>
+            </div>
+          </div>
         </div>
       </div>
 
