@@ -471,6 +471,7 @@ function saveNewAlarmFromModal() {
   saveAlarms();
   renderAlarms();
   startAlarmChecks();
+  scheduleLocalNotification(newAlarmObj);
   closeAddAlarmModal();
 }
 
@@ -826,6 +827,7 @@ function deleteAlarm(id) {
   alarms = alarms.filter(a => String(a.id) !== idStr);
   saveAlarms();
   renderAlarms();
+  cancelLocalNotification(idStr); // Cancel notification
   if (alarms.length === 0) stopAlarmChecks();
 }
 
@@ -836,6 +838,11 @@ function toggleAlarm(id, checked) {
     a.enabled = checked; 
     saveAlarms();
     renderAlarms(); 
+    if (checked) {
+      scheduleLocalNotification(a); // Reschedule notification
+    } else {
+      cancelLocalNotification(idStr); // Cancel notification
+    }
   }
 }
 
@@ -846,6 +853,7 @@ function clearAllAlarms() {
   saveAlarms();
   renderAlarms();
   stopAlarmChecks();
+  cancelAllLocalNotifications(); // Cancel all notifications
   setGlobalStatus('idle', 'no alarms active');
 }
 
@@ -1701,9 +1709,119 @@ function checkAppMode() {
   }
 }
 
+/* ════════════════════════════════════
+   CAPACITOR NATIVE PLUGINS (BACKGROUND ALARMS & ANTI-CHEAT)
+════════════════════════════════════ */
+async function scheduleLocalNotification(alarmObj) {
+  if (!window.Capacitor || !window.Capacitor.isPluginAvailable('LocalNotifications')) return;
+
+  const { LocalNotifications } = window.Capacitor.Plugins;
+  const parts = alarmObj.time.split(':');
+  const now = new Date();
+  const target = new Date(now);
+  target.setHours(parseInt(parts[0], 10), parseInt(parts[1], 10), 0, 0);
+
+  if (target <= now) {
+    target.setDate(target.getDate() + 1);
+  }
+
+  // Generate unique numeric integer ID from timestamp string
+  const notifyId = parseInt(alarmObj.id.slice(-6), 10) || Math.floor(Math.random() * 1000000);
+
+  try {
+    await LocalNotifications.schedule({
+      notifications: [
+        {
+          id: notifyId,
+          title: alarmObj.label || '⏰ Wake Up!',
+          body: `Time is ${alarmObj.timeStr}. Dismiss the challenge game to turn off alarm!`,
+          schedule: { at: target },
+          vibration: true,
+          ongoing: true, // Android persistent notification
+          extra: {
+            time: alarmObj.time,
+            id: alarmObj.id
+          }
+        }
+      ]
+    });
+    console.log(`[Capacitor] Scheduled Local Notification for ${alarmObj.timeStr} (ID: ${notifyId})`);
+  } catch (err) {
+    console.error('[Capacitor] Failed to schedule notification:', err);
+  }
+}
+
+async function cancelLocalNotification(alarmId) {
+  if (!window.Capacitor || !window.Capacitor.isPluginAvailable('LocalNotifications')) return;
+
+  const { LocalNotifications } = window.Capacitor.Plugins;
+  const notifyId = parseInt(alarmId.slice(-6), 10);
+
+  try {
+    await LocalNotifications.cancel({
+      notifications: [{ id: notifyId }]
+    });
+    console.log(`[Capacitor] Cancelled Local Notification for ID: ${notifyId}`);
+  } catch (err) {
+    console.error('[Capacitor] Failed to cancel notification:', err);
+  }
+}
+
+async function cancelAllLocalNotifications() {
+  if (!window.Capacitor || !window.Capacitor.isPluginAvailable('LocalNotifications')) return;
+
+  const { LocalNotifications } = window.Capacitor.Plugins;
+
+  try {
+    const pending = await LocalNotifications.getPending();
+    if (pending.notifications.length > 0) {
+      await LocalNotifications.cancel(pending);
+      console.log(`[Capacitor] Cancelled all pending notifications (${pending.notifications.length})`);
+    }
+  } catch (err) {
+    console.error('[Capacitor] Failed to cancel all notifications:', err);
+  }
+}
+
+function initCapacitorPlugins() {
+  if (window.Capacitor && window.Capacitor.isPluginAvailable('App')) {
+    const { App } = window.Capacitor.Plugins;
+    
+    // Intercept physical back button to block exits during active ringing
+    App.addListener('backButton', (data) => {
+      if (isAlarmRinging) {
+        console.warn('[Anti-Cheat] Back button pressed but exit blocked during active alarm!');
+      } else {
+        App.exitApp();
+      }
+    });
+    console.log('[Capacitor] App back button listener registered.');
+  }
+
+  if (window.Capacitor && window.Capacitor.isPluginAvailable('LocalNotifications')) {
+    const { LocalNotifications } = window.Capacitor.Plugins;
+    
+    LocalNotifications.requestPermissions().then((res) => {
+      console.log('[Capacitor] LocalNotifications permissions response:', res);
+    });
+
+    LocalNotifications.addListener('localNotificationActionPerformed', (notification) => {
+      console.log('[Capacitor] Notification action clicked:', notification);
+      
+      const id = notification.notification.id.toString();
+      const match = alarms.find(a => String(a.id) === id || a.time === notification.notification.extra?.time);
+      if (match) {
+        match.ringing = true;
+        triggerAlarm(match);
+      }
+    });
+  }
+}
+
 function initApp() {
   checkAppMode();
   loadCustomTone();
+  initCapacitorPlugins();
 }
 
 if (document.readyState === 'loading') {
