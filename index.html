@@ -194,12 +194,29 @@
               <span class="chevron">▼</span>
             </div>
             <div class="custom-select-options">
-              <div class="custom-option selected" data-value="siren" onclick="selectCustomOption('ringtoneSelectWrapper', 'siren', '🚨 Siren')">🚨 Siren</div>
-              <div class="custom-option" data-value="digital" onclick="selectCustomOption('ringtoneSelectWrapper', 'digital', '📟 Digital')">📟 Digital</div>
-              <div class="custom-option" data-value="classic" onclick="selectCustomOption('ringtoneSelectWrapper', 'classic', '🔔 Classic Bell')">🔔 Classic Bell</div>
-              <div class="custom-option" data-value="buzzer" onclick="selectCustomOption('ringtoneSelectWrapper', 'buzzer', '📢 Loud Buzzer')">📢 Loud Buzzer</div>
-              <div class="custom-option" id="modalCustomRingtoneOpt" data-value="custom" onclick="selectCustomOption('ringtoneSelectWrapper', 'custom', '🎼 Custom Song')" style="display: none;">🎼 Custom Song</div>
-              <div class="custom-option" data-value="add_song" onclick="selectCustomOption('ringtoneSelectWrapper', 'add_song', '🎵 + Add Song')" style="border-top: 1px solid var(--border); color: var(--accent); font-weight: bold;">🎵 + Add Song</div>
+              <div class="custom-option selected" data-value="siren" onclick="selectCustomOption('ringtoneSelectWrapper', 'siren', '🚨 Siren')">
+                <span>🚨 Siren</span>
+                <span class="preview-btn" onclick="previewTone('siren', event)" title="Preview">🔊</span>
+              </div>
+              <div class="custom-option" data-value="digital" onclick="selectCustomOption('ringtoneSelectWrapper', 'digital', '📟 Digital')">
+                <span>📟 Digital</span>
+                <span class="preview-btn" onclick="previewTone('digital', event)" title="Preview">🔊</span>
+              </div>
+              <div class="custom-option" data-value="classic" onclick="selectCustomOption('ringtoneSelectWrapper', 'classic', '🔔 Classic Bell')">
+                <span>🔔 Classic Bell</span>
+                <span class="preview-btn" onclick="previewTone('classic', event)" title="Preview">🔊</span>
+              </div>
+              <div class="custom-option" data-value="buzzer" onclick="selectCustomOption('ringtoneSelectWrapper', 'buzzer', '📢 Loud Buzzer')">
+                <span>📢 Loud Buzzer</span>
+                <span class="preview-btn" onclick="previewTone('buzzer', event)" title="Preview">🔊</span>
+              </div>
+              <div class="custom-option" id="modalCustomRingtoneOpt" data-value="custom" onclick="selectCustomOption('ringtoneSelectWrapper', 'custom', '🎼 Custom Song')" style="display: none;">
+                <span>🎼 Custom Song</span>
+                <span class="preview-btn" onclick="previewTone('custom', event)" title="Preview">🔊</span>
+              </div>
+              <div class="custom-option" data-value="add_song" onclick="selectCustomOption('ringtoneSelectWrapper', 'add_song', '🎵 + Add Song')" style="border-top: 1px solid var(--border); color: var(--accent); font-weight: bold;">
+                <span>🎵 + Add Song</span>
+              </div>
             </div>
           </div>
         </div>
@@ -255,7 +272,7 @@
         </div>
         <div class="setting-right" onclick="event.stopPropagation()">
           <label class="switch">
-            <input type="checkbox" id="modalVibrate" checked>
+            <input type="checkbox" id="modalVibrate" checked onchange="handleVibrateToggle(this)">
             <span class="slider"></span>
           </label>
         </div>

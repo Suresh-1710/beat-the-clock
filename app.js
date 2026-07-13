@@ -308,8 +308,15 @@ function toggleSwitch(id) {
   const cb = document.getElementById(id);
   if (cb) {
     cb.checked = !cb.checked;
+    cb.dispatchEvent(new Event('change'));
   }
   updateModalTimeNotice();
+}
+
+function handleVibrateToggle(cb) {
+  if (cb.checked && navigator.vibrate) {
+    navigator.vibrate(150);
+  }
 }
 
 function updateModalTimeNotice() {
