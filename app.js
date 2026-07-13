@@ -701,6 +701,10 @@ async function startAlarm(toneName) {
 }
 
 function stopAlarm() {
+  if (window.Capacitor && window.Capacitor.isPluginAvailable('AlarmPlugin')) {
+    window.Capacitor.Plugins.AlarmPlugin.stopRinging();
+  }
+
   isAlarmRinging = false;
   releaseWakeLock();
   exitFullscreen();
@@ -994,6 +998,10 @@ function setGlobalStatus(state, msg) {
 }
 
 function triggerAlarm(alarmObj) {
+  if (window.Capacitor && window.Capacitor.isPluginAvailable('AlarmPlugin')) {
+    window.Capacitor.Plugins.AlarmPlugin.startRinging();
+  }
+
   renderAlarms();
   setGlobalStatus('ringing', `alarm! ${alarmObj.time}`);
   startAlarm(alarmObj.tone);
