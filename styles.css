@@ -1008,18 +1008,18 @@ body:not(.has-banner) {
   position: relative;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-end;
   gap: 1.5rem;
-  padding: 0.8rem 1rem;
+  padding: 8px 10px;
   background: var(--surface2);
   border-bottom: 1px solid var(--border);
   box-sizing: border-box;
-  height: 150px; /* Fixed height for 5 visible items */
+  height: 180px; /* Increased to fit labels and scrolling wheels */
   overflow: hidden;
 }
 .picker-selection-indicator {
   position: absolute;
-  top: 60px; /* Center row (30px selection height) */
+  top: 80px; /* Aligned with the center scroll snaps */
   left: 15px;
   right: 15px;
   height: 30px;
