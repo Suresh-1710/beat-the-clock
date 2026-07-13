@@ -319,12 +319,78 @@ function handleVibrateToggle(cb) {
   }
 }
 
+function getSelectedWheelValue(viewportId) {
+  const viewport = document.getElementById(viewportId);
+  if (!viewport) return null;
+  const activeItem = viewport.querySelector('.picker-item.active');
+  return activeItem ? activeItem.dataset.value : null;
+}
+
+let scrollTimers = {};
+
+function handleWheelScroll(viewportId) {
+  const viewport = document.getElementById(viewportId);
+  if (!viewport) return;
+
+  clearTimeout(scrollTimers[viewportId]);
+  scrollTimers[viewportId] = setTimeout(() => {
+    updateActiveWheelItem(viewport);
+  }, 80);
+}
+
+function updateActiveWheelItem(viewport) {
+  const itemHeight = 30; // height of picker-item in pixels
+  const scrollTop = viewport.scrollTop;
+  const index = Math.round(scrollTop / itemHeight);
+  const items = viewport.querySelectorAll('.picker-item');
+
+  items.forEach((item, idx) => {
+    if (idx === index) {
+      item.classList.add('active');
+    } else {
+      item.classList.remove('active');
+    }
+  });
+
+  updateModalTimeNotice();
+}
+
+function setWheelPickerTime(hour, minute, ampm) {
+  const hourViewport = document.getElementById('pickerHour');
+  const minViewport = document.getElementById('pickerMinute');
+  const ampmViewport = document.getElementById('pickerAMPM');
+  const itemHeight = 30;
+
+  if (hourViewport) {
+    const index = parseInt(hour, 10) - 1;
+    // Account for 2 spacers at the beginning of the viewport scroll
+    hourViewport.scrollTop = index * itemHeight;
+    updateActiveWheelItem(hourViewport);
+  }
+
+  if (minViewport) {
+    const index = parseInt(minute, 10);
+    minViewport.scrollTop = index * itemHeight;
+    updateActiveWheelItem(minViewport);
+  }
+
+  if (ampmViewport) {
+    const index = ampm === 'PM' ? 1 : 0;
+    ampmViewport.scrollTop = index * itemHeight;
+    updateActiveWheelItem(ampmViewport);
+  }
+}
+
 function updateModalTimeNotice() {
-  const hVal = parseInt(document.getElementById('modalHour').value, 10);
-  const mVal = parseInt(document.getElementById('modalMinute').value, 10);
-  const ampmVal = document.getElementById('modalAMPM').value;
+  const hStr = getSelectedWheelValue('pickerHour');
+  const mStr = getSelectedWheelValue('pickerMinute');
+  const ampmVal = getSelectedWheelValue('pickerAMPM');
   const noticeEl = document.getElementById('modalAlarmDelayNotice');
-  if (!noticeEl || isNaN(hVal) || isNaN(mVal)) return;
+  if (!noticeEl || !hStr || !mStr || !ampmVal) return;
+
+  const hVal = parseInt(hStr, 10);
+  const mVal = parseInt(mStr, 10);
+  if (isNaN(hVal) || isNaN(mVal)) return;
 
   let targetHour = hVal;
   if (ampmVal === 'PM' && targetHour < 12) targetHour += 12;
@@ -352,9 +418,17 @@ function updateModalTimeNotice() {
 }
 
 function saveNewAlarmFromModal() {
-  const hVal = parseInt(document.getElementById('modalHour').value, 10);
-  const mVal = parseInt(document.getElementById('modalMinute').value, 10);
-  const ampmVal = document.getElementById('modalAMPM').value;
+  const hStr = getSelectedWheelValue('pickerHour');
+  const mStr = getSelectedWheelValue('pickerMinute');
+  const ampmVal = getSelectedWheelValue('pickerAMPM');
+
+  if (!hStr || !mStr || !ampmVal) {
+    alert('Please select a valid time.');
+    return;
+  }
+
+  const hVal = parseInt(hStr, 10);
+  const mVal = parseInt(mStr, 10);
   const toneVal = modalSelectedTone;
   const gameVal = modalSelectedGame;
   const repeatVal = modalSelectedRepeat;
@@ -401,36 +475,30 @@ function saveNewAlarmFromModal() {
 }
 
 function initTimePickers() {
-  const hourSelect = document.getElementById('modalHour');
-  const minSelect = document.getElementById('modalMinute');
-  if (!hourSelect || !minSelect) return;
-  
-  hourSelect.innerHTML = '';
-  minSelect.innerHTML = '';
-  
+  const hourViewport = document.getElementById('pickerHour');
+  const minViewport = document.getElementById('pickerMinute');
+  if (!hourViewport || !minViewport) return;
+
+  // Render Hours 1-12
+  let hHtml = '<div class="picker-spacer"></div><div class="picker-spacer"></div>';
   for (let h = 1; h <= 12; h++) {
-    const opt = document.createElement('option');
-    opt.value = h;
-    opt.textContent = String(h).padStart(2, '0');
-    hourSelect.appendChild(opt);
+    hHtml += `<div class="picker-item" data-value="${h}">${String(h).padStart(2, '0')}</div>`;
   }
-  
+  hHtml += '<div class="picker-spacer"></div><div class="picker-spacer"></div>';
+  hourViewport.innerHTML = hHtml;
+
+  // Render Minutes 00-59
+  let mHtml = '<div class="picker-spacer"></div><div class="picker-spacer"></div>';
   for (let m = 0; m < 60; m++) {
-    const opt = document.createElement('option');
-    opt.value = String(m).padStart(2, '0');
-    opt.textContent = String(m).padStart(2, '0');
-    minSelect.appendChild(opt);
+    mHtml += `<div class="picker-item" data-value="${String(m).padStart(2, '0')}">${String(m).padStart(2, '0')}</div>`;
   }
-  
+  mHtml += '<div class="picker-spacer"></div><div class="picker-spacer"></div>';
+  minViewport.innerHTML = mHtml;
+
   resetModalTimePicker();
 }
 
 function resetModalTimePicker() {
-  const hourSelect = document.getElementById('modalHour');
-  const minSelect = document.getElementById('modalMinute');
-  const ampmSelect = document.getElementById('modalAMPM');
-  if (!hourSelect || !minSelect || !ampmSelect) return;
-  
   const now = new Date();
   let currentHour = now.getHours();
   let currentMin = now.getMinutes() + 1; // Default to 1 minute from now
@@ -438,16 +506,15 @@ function resetModalTimePicker() {
     currentMin = 0;
     currentHour++;
   }
-  
+
   let currentAMPM = currentHour >= 12 ? 'PM' : 'AM';
   currentHour = currentHour % 12;
   if (currentHour === 0) currentHour = 12;
-  
-  hourSelect.value = currentHour;
-  minSelect.value = String(currentMin).padStart(2, '0');
-  ampmSelect.value = currentAMPM;
-  
-  updateModalTimeNotice();
+
+  // Set the scroll position for wheel pickers
+  setTimeout(() => {
+    setWheelPickerTime(currentHour, currentMin, currentAMPM);
+  }, 100);
 }
 
 const TONES = {

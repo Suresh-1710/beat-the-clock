@@ -162,20 +162,35 @@
 
     <!-- Scrollable Time Picker Wheel -->
     <div class="modal-time-picker">
+      <div class="picker-selection-indicator"></div>
+
+      <!-- AM/PM Column -->
       <div class="picker-column">
         <div class="picker-label">AM/PM</div>
-        <select id="modalAMPM" class="picker-wheel-select" onchange="updateModalTimeNotice()">
-          <option value="AM">AM</option>
-          <option value="PM">PM</option>
-        </select>
+        <div class="picker-viewport" id="pickerAMPM" onscroll="handleWheelScroll('pickerAMPM')">
+          <div class="picker-spacer"></div>
+          <div class="picker-spacer"></div>
+          <div class="picker-item active" data-value="AM">AM</div>
+          <div class="picker-item" data-value="PM">PM</div>
+          <div class="picker-spacer"></div>
+          <div class="picker-spacer"></div>
+        </div>
       </div>
+
+      <!-- Hour Column -->
       <div class="picker-column">
         <div class="picker-label">Hour</div>
-        <select id="modalHour" class="picker-wheel-select" onchange="updateModalTimeNotice()"></select>
+        <div class="picker-viewport" id="pickerHour" onscroll="handleWheelScroll('pickerHour')">
+          <!-- Populated dynamically -->
+        </div>
       </div>
+
+      <!-- Minute Column -->
       <div class="picker-column">
         <div class="picker-label">Minute</div>
-        <select id="modalMinute" class="picker-wheel-select" onchange="updateModalTimeNotice()"></select>
+        <div class="picker-viewport" id="pickerMinute" onscroll="handleWheelScroll('pickerMinute')">
+          <!-- Populated dynamically -->
+        </div>
       </div>
     </div>
 

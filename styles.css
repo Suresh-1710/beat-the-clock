@@ -1005,47 +1005,77 @@ body:not(.has-banner) {
 }
 
 .modal-time-picker {
+  position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 1rem;
+  gap: 1.5rem;
   padding: 0.8rem 1rem;
   background: var(--surface2);
   border-bottom: 1px solid var(--border);
   box-sizing: border-box;
+  height: 150px; /* Fixed height for 5 visible items */
+  overflow: hidden;
+}
+.picker-selection-indicator {
+  position: absolute;
+  top: 60px; /* Center row (30px selection height) */
+  left: 15px;
+  right: 15px;
+  height: 30px;
+  border-top: 1px solid rgba(0, 229, 160, 0.15);
+  border-bottom: 1px solid rgba(0, 229, 160, 0.15);
+  background: rgba(0, 229, 160, 0.03);
+  pointer-events: none;
+  z-index: 1;
+  border-radius: 4px;
 }
 .picker-column {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 70px;
+  width: 65px;
+  z-index: 2;
 }
 .picker-label {
   font-size: 9px;
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 1px;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   font-weight: 700;
 }
-.picker-wheel-select {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text);
-  font-size: 22px;
-  font-weight: bold;
-  padding: 6px;
-  border-radius: 10px;
+.picker-viewport {
+  height: 150px; /* Shows 5 rows */
   width: 100%;
-  text-align: center;
-  outline: none;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.2);
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  scrollbar-width: none; /* Hide scrollbars */
+  box-sizing: border-box;
 }
-.picker-wheel-select:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 10px rgba(0, 229, 160, 0.2);
+.picker-viewport::-webkit-scrollbar {
+  display: none;
+}
+.picker-item {
+  height: 30px;
+  line-height: 30px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--muted);
+  scroll-snap-align: center;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  font-weight: 500;
+  user-select: none;
+}
+.picker-item.active {
+  color: var(--accent);
+  font-size: 20px;
+  font-weight: 900;
+  text-shadow: 0 0 10px rgba(0, 229, 160, 0.3);
+}
+.picker-spacer {
+  height: 30px;
 }
 
 .modal-settings-list {
