@@ -1713,8 +1713,18 @@ function checkAppMode() {
    CAPACITOR NATIVE PLUGINS (BACKGROUND ALARMS & ANTI-CHEAT)
 ════════════════════════════════════ */
 async function scheduleLocalNotification(alarmObj) {
-  if (!window.Capacitor || !window.Capacitor.isPluginAvailable('LocalNotifications')) return;
+  // 1. Schedule exact Android OS AlarmManager event
+  if (window.Capacitor && window.Capacitor.isPluginAvailable('AlarmPlugin')) {
+    const { AlarmPlugin } = window.Capacitor.Plugins;
+    AlarmPlugin.setAlarm({ id: alarmObj.id, time: alarmObj.time }).then((res) => {
+      console.log('[Capacitor] Scheduled Android AlarmManager for:', alarmObj.timeStr, res);
+    }).catch(err => {
+      console.error('[Capacitor] Failed to schedule Android AlarmManager:', err);
+    });
+  }
 
+  // 2. Schedule Local Notification backup (makes noise / sound)
+  if (!window.Capacitor || !window.Capacitor.isPluginAvailable('LocalNotifications')) return;
   const { LocalNotifications } = window.Capacitor.Plugins;
   const parts = alarmObj.time.split(':');
   const now = new Date();
@@ -1725,7 +1735,6 @@ async function scheduleLocalNotification(alarmObj) {
     target.setDate(target.getDate() + 1);
   }
 
-  // Generate unique numeric integer ID from timestamp string
   const notifyId = parseInt(alarmObj.id.slice(-6), 10) || Math.floor(Math.random() * 1000000);
 
   try {
@@ -1737,7 +1746,7 @@ async function scheduleLocalNotification(alarmObj) {
           body: `Time is ${alarmObj.timeStr}. Dismiss the challenge game to turn off alarm!`,
           schedule: { at: target },
           vibration: true,
-          ongoing: true, // Android persistent notification
+          ongoing: true,
           extra: {
             time: alarmObj.time,
             id: alarmObj.id
@@ -1752,8 +1761,18 @@ async function scheduleLocalNotification(alarmObj) {
 }
 
 async function cancelLocalNotification(alarmId) {
-  if (!window.Capacitor || !window.Capacitor.isPluginAvailable('LocalNotifications')) return;
+  // 1. Cancel exact Android OS AlarmManager event
+  if (window.Capacitor && window.Capacitor.isPluginAvailable('AlarmPlugin')) {
+    const { AlarmPlugin } = window.Capacitor.Plugins;
+    AlarmPlugin.cancelAlarm({ id: alarmId }).then((res) => {
+      console.log('[Capacitor] Cancelled Android AlarmManager for ID:', alarmId, res);
+    }).catch(err => {
+      console.error('[Capacitor] Failed to cancel Android AlarmManager:', err);
+    });
+  }
 
+  // 2. Cancel Local Notification backup
+  if (!window.Capacitor || !window.Capacitor.isPluginAvailable('LocalNotifications')) return;
   const { LocalNotifications } = window.Capacitor.Plugins;
   const notifyId = parseInt(alarmId.slice(-6), 10);
 
@@ -1768,26 +1787,26 @@ async function cancelLocalNotification(alarmId) {
 }
 
 async function cancelAllLocalNotifications() {
-  if (!window.Capacitor || !window.Capacitor.isPluginAvailable('LocalNotifications')) return;
-
-  const { LocalNotifications } = window.Capacitor.Plugins;
-
-  try {
-    const pending = await LocalNotifications.getPending();
-    if (pending.notifications.length > 0) {
-      await LocalNotifications.cancel(pending);
-      console.log(`[Capacitor] Cancelled all pending notifications (${pending.notifications.length})`);
-    }
-  } catch (err) {
-    console.error('[Capacitor] Failed to cancel all notifications:', err);
-  }
+  // Cancel each scheduled native and local notification
+  alarms.forEach(a => {
+    cancelLocalNotification(a.id);
+  });
 }
 
 function initCapacitorPlugins() {
+  // Define global receiver for Java AlarmManager triggers to wake webview
+  window.triggerAlarmFromJava = function(alarmId) {
+    console.log('[Java Trigger] OS Alarm triggered! ID:', alarmId);
+    const match = alarms.find(a => String(a.id) === String(alarmId));
+    if (match && !isAlarmRinging) {
+      match.ringing = true;
+      triggerAlarm(match);
+    }
+  };
+
   if (window.Capacitor && window.Capacitor.isPluginAvailable('App')) {
     const { App } = window.Capacitor.Plugins;
     
-    // Intercept physical back button to block exits during active ringing
     App.addListener('backButton', (data) => {
       if (isAlarmRinging) {
         console.warn('[Anti-Cheat] Back button pressed but exit blocked during active alarm!');
@@ -1810,7 +1829,7 @@ function initCapacitorPlugins() {
       
       const id = notification.notification.id.toString();
       const match = alarms.find(a => String(a.id) === id || a.time === notification.notification.extra?.time);
-      if (match) {
+      if (match && !isAlarmRinging) {
         match.ringing = true;
         triggerAlarm(match);
       }
