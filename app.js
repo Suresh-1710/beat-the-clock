@@ -1724,7 +1724,7 @@ async function scheduleLocalNotification(alarmObj) {
   // 1. Schedule exact Android OS AlarmManager event
   if (window.Capacitor && window.Capacitor.isPluginAvailable('AlarmPlugin')) {
     const { AlarmPlugin } = window.Capacitor.Plugins;
-    AlarmPlugin.setAlarm({ id: alarmObj.id, time: alarmObj.time }).then((res) => {
+    AlarmPlugin.setAlarm({ id: alarmObj.id, time: alarmObj.time, vibrate: alarmObj.vibrate }).then((res) => {
       console.log('[Capacitor] Scheduled Android AlarmManager for:', alarmObj.timeStr, res);
     }).catch(err => {
       console.error('[Capacitor] Failed to schedule Android AlarmManager:', err);
