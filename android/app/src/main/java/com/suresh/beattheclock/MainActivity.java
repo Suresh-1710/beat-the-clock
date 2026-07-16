@@ -91,6 +91,24 @@ public class MainActivity extends BridgeActivity {
     private void handleIntent(Intent intent) {
         if (intent != null && intent.hasExtra("alarmId")) {
             final String alarmId = intent.getStringExtra("alarmId");
+            final String alarmTime = intent.getStringExtra("alarmTime");
+            final boolean vibrate = intent.getBooleanExtra("vibrate", false);
+
+            // Start background foreground sound service from Activity context to bypass background restrictions
+            try {
+                Intent serviceIntent = new Intent(this, AlarmService.class);
+                serviceIntent.putExtra("alarmId", alarmId);
+                serviceIntent.putExtra("alarmTime", alarmTime);
+                serviceIntent.putExtra("vibrate", vibrate);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    startForegroundService(serviceIntent);
+                } else {
+                    startService(serviceIntent);
+                }
+            } catch (Exception e) {
+                android.util.Log.e("MainActivity", "Failed to start service from MainActivity: " + e.getMessage());
+            }
+
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
