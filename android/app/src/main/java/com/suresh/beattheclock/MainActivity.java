@@ -49,7 +49,7 @@ public class MainActivity extends BridgeActivity {
     }
 
     @Override
-    protected void onResume() {
+    public void onResume() {
         super.onResume();
         
         // Re-apply display flags on resume to wake screen reliably when opened from background
