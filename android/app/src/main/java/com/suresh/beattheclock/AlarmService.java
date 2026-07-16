@@ -75,12 +75,12 @@ public class AlarmService extends Service {
                 ) {
                     @Override
                     public void onSetVolumeTo(int volume) {
-                        forceMaxVolume();
+                        // Do nothing to silently swallow background volume slider modifications
                     }
 
                     @Override
                     public void onAdjustVolume(int direction) {
-                        forceMaxVolume();
+                        // Do nothing to silently swallow background hardware volume key presses
                     }
                 };
                 mediaSession.setPlaybackToRemote(volumeProvider);

@@ -111,8 +111,7 @@ public class MainActivity extends BridgeActivity {
             if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN || 
                 keyCode == KeyEvent.KEYCODE_VOLUME_UP || 
                 keyCode == KeyEvent.KEYCODE_VOLUME_MUTE) {
-                forceMaxVolume();
-                return true; // Consume key event (blocks OS from changing volume)
+                return true; // Consume key event silently (prevents OS from changing volume or showing volume slider)
             }
         }
         return super.dispatchKeyEvent(event);
