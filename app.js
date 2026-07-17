@@ -1812,6 +1812,21 @@ function initCapacitorPlugins() {
     }
   };
 
+  if (window.Capacitor) {
+    const oemBtn = document.getElementById('oemSettingsBtn');
+    if (oemBtn) oemBtn.style.display = 'flex';
+
+    window.openOEMSettings = function() {
+      if (window.Capacitor.Plugins.AlarmPlugin) {
+        window.Capacitor.Plugins.AlarmPlugin.openAutostartSettings().then((res) => {
+          console.log('[Java settings] Autostart settings page launched:', res);
+        }).catch((err) => {
+          console.error('[Java settings] Failed to launch settings page:', err);
+        });
+      }
+    };
+  }
+
   if (window.Capacitor && window.Capacitor.isPluginAvailable('App')) {
     const { App } = window.Capacitor.Plugins;
     

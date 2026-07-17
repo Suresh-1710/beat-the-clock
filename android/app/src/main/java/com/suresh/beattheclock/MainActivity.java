@@ -16,6 +16,9 @@ import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import com.getcapacitor.JSObject;
 import java.util.Calendar;
+import android.net.Uri;
+import android.provider.Settings;
+import android.os.PowerManager;
 
 public class MainActivity extends BridgeActivity {
     private static boolean isAlarmRingingJava = false;
@@ -45,7 +48,36 @@ public class MainActivity extends BridgeActivity {
         );
 
         dismissKeyguard();
+        checkSystemPermissions();
         handleIntent(getIntent());
+    }
+
+    private void checkSystemPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            // 1. Check Overlay Permission
+            if (!Settings.canDrawOverlays(this)) {
+                try {
+                    Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                        Uri.parse("package:" + getPackageName()));
+                    startActivity(intent);
+                } catch (Exception e) {
+                    try {
+                        Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
+                        startActivity(intent);
+                    } catch (Exception ex) {}
+                }
+            }
+            
+            // 2. Check Battery Optimization Exemption
+            PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+            if (pm != null && !pm.isIgnoringBatteryOptimizations(getPackageName())) {
+                try {
+                    Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                    intent.setData(Uri.parse("package:" + getPackageName()));
+                    startActivity(intent);
+                } catch (Exception e) {}
+            }
+        }
     }
 
     @Override

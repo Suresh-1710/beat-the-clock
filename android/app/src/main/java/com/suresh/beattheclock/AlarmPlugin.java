@@ -162,4 +162,53 @@ public class AlarmPlugin extends Plugin {
         ret.put("status", "success");
         call.resolve(ret);
     }
+
+    @PluginMethod
+    public void openAutostartSettings(PluginCall call) {
+        Context context = getContext();
+        boolean success = false;
+        
+        String[][] oemPackages = {
+            {"com.miui.securitycenter", "com.miui.permcenter.autostart.AutoStartManagementActivity"},
+            {"com.letv.android.letvsafe", "com.letv.android.letvsafe.AutostartManageActivity"},
+            {"com.huawei.systemmanager", "com.huawei.systemmanager.startupmgr.StartupNormalAppListActivity"},
+            {"com.huawei.systemmanager", "com.huawei.systemmanager.optimize.process.ProtectActivity"},
+            {"com.coloros.safecenter", "com.coloros.safecenter.permission.startup.StartupAppListActivity"},
+            {"com.coloros.safecenter", "com.coloros.safecenter.permission.startup.StartupAppListActivity"},
+            {"com.oppo.safe", "com.oppo.safe.permission.startup.StartupAppListActivity"},
+            {"com.iqoo.secure", "com.iqoo.secure.ui.phoneoptimize.AddWhiteListActivity"},
+            {"com.iqoo.secure", "com.iqoo.secure.ui.phoneoptimize.BgStartUpManager"},
+            {"com.vivo.permissionmanager", "com.vivo.permissionmanager.activity.BgStartUpManagerActivity"},
+            {"com.samsung.android.lool", "com.samsung.android.sm.ui.battery.BatteryActivity"},
+            {"com.samsung.android.sm_cn", "com.samsung.android.sm.ui.ram.AutoRunActivity"},
+            {"com.samsung.android.sm", "com.samsung.android.sm.ui.ram.AutoRunActivity"},
+            {"com.oneplus.security", "com.oneplus.security.chainlaunch.AppBootLaunchActivity"}
+        };
+
+        for (String[] pack : oemPackages) {
+            try {
+                Intent intent = new Intent();
+                intent.setClassName(pack[0], pack[1]);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(intent);
+                success = true;
+                break;
+            } catch (Exception e) {}
+        }
+
+        if (!success) {
+            try {
+                // Fallback: open application info details page directly
+                Intent intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                intent.setData(android.net.Uri.parse("package:" + context.getPackageName()));
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(intent);
+                success = true;
+            } catch (Exception e) {}
+        }
+
+        JSObject ret = new JSObject();
+        ret.put("success", success);
+        call.resolve(ret);
+    }
 }
