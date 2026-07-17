@@ -564,6 +564,56 @@ const TONES = {
     g2.gain.exponentialRampToValueAtTime(0.001, t0 + 1.1);
     o2.start(t0); o2.stop(t0 + 1.1);
     return 1400;
+  },
+
+  /* 🔔 Classic Bell — tonal ring with harmonics */
+  classic(ctx, t0, vol) {
+    function bell(freq, dur, g) {
+      const o = ctx.createOscillator(), gn = ctx.createGain();
+      o.connect(gn); gn.connect(ctx.destination);
+      o.type = 'sine'; o.frequency.value = freq;
+      gn.gain.setValueAtTime(g * vol, t0);
+      gn.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+      o.start(t0); o.stop(t0 + dur);
+    }
+    // Ding at 0, 0.5, 1.0
+    [0, 0.5, 1.0].forEach(off => {
+      bell(1318 + off*0, 0.45, 0.50);
+      bell(2637, 0.3, 0.20);
+      bell(3951, 0.2, 0.12);
+    });
+    // Re-ding
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.type = 'sine'; o.frequency.value = 1318;
+    g.gain.setValueAtTime(0.50*vol, t0+0.5);
+    g.gain.exponentialRampToValueAtTime(0.001, t0+0.95);
+    o.start(t0+0.5); o.stop(t0+0.96);
+    return 1400;
+  },
+
+  /* 📢 Loud Buzzer — aggressive industrial */
+  buzzer(ctx, t0, vol) {
+    function buz(type, f, start, end, g) {
+      const o = ctx.createOscillator(), gn = ctx.createGain();
+      o.connect(gn); gn.connect(ctx.destination);
+      o.type = type; o.frequency.value = f;
+      gn.gain.setValueAtTime(g * vol, t0 + start);
+      gn.gain.setValueAtTime(g * vol, t0 + end - 0.01);
+      gn.gain.exponentialRampToValueAtTime(0.001, t0 + end);
+      o.start(t0 + start); o.stop(t0 + end);
+    }
+    buz('sawtooth', 120, 0,    0.25, 0.55);
+    buz('square',   440, 0,    0.25, 0.50);
+    buz('sawtooth', 120, 0.35, 0.60, 0.55);
+    buz('square',   440, 0.35, 0.60, 0.50);
+    buz('sawtooth', 120, 0.70, 0.95, 0.55);
+    buz('square',   550, 0.70, 0.95, 0.45);
+    // noise-like overdrive via many simultaneous detuned saws
+    [80,90,100,110,130].forEach((f,i) => {
+      buz('sawtooth', f, i*0.01, 0.95, 0.10);
+    });
+    return 1100;
   }
 };
 
@@ -832,7 +882,7 @@ function renderAlarms() {
   if (!list) return;
 
   list.innerHTML = alarms.map(a => {
-    let toneLabel = { siren:'🚨 Siren', digital:'📟 Digital' }[a.tone];
+    let toneLabel = { siren:'🚨 Siren', digital:'📟 Digital', classic:'🔔 Classic Bell', buzzer:'📢 Loud Buzzer' }[a.tone];
     if (a.tone === 'custom') {
       toneLabel = '🎼 Custom Song';
     } else if (!toneLabel) {
