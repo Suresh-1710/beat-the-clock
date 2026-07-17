@@ -53,8 +53,17 @@ public class MainActivity extends BridgeActivity {
     }
 
     private void checkSystemPermissions() {
+        // 1. Request POST_NOTIFICATIONS (Android 13+ / API 33+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                try {
+                    requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 102);
+                } catch (Exception e) {}
+            }
+        }
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            // 1. Check Overlay Permission
+            // 2. Check Overlay Permission
             if (!Settings.canDrawOverlays(this)) {
                 try {
                     Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
@@ -68,7 +77,7 @@ public class MainActivity extends BridgeActivity {
                 }
             }
             
-            // 2. Check Battery Optimization Exemption
+            // 3. Check Battery Optimization Exemption
             PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
             if (pm != null && !pm.isIgnoringBatteryOptimizations(getPackageName())) {
                 try {
@@ -76,6 +85,23 @@ public class MainActivity extends BridgeActivity {
                     intent.setData(Uri.parse("package:" + getPackageName()));
                     startActivity(intent);
                 } catch (Exception e) {}
+            }
+        }
+
+        // 4. Check Full-Screen Intent Permission (Android 14+ / API 34+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            android.app.NotificationManager nm = (android.app.NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            if (nm != null && !nm.canUseFullScreenIntent()) {
+                try {
+                    Intent intent = new Intent("android.settings.MANAGE_APP_USE_FULL_SCREEN_INTENT");
+                    intent.setData(Uri.parse("package:" + getPackageName()));
+                    startActivity(intent);
+                } catch (Exception e) {
+                    try {
+                        Intent intent = new Intent("android.settings.MANAGE_APP_USE_FULL_SCREEN_INTENT");
+                        startActivity(intent);
+                    } catch (Exception ex) {}
+                }
             }
         }
     }
