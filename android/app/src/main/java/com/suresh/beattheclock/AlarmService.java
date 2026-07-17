@@ -119,6 +119,8 @@ public class AlarmService extends Service {
         Intent launchIntent = new Intent(this, MainActivity.class);
         launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         launchIntent.putExtra("alarmId", alarmId);
+        launchIntent.putExtra("alarmTime", alarmTime);
+        launchIntent.putExtra("vibrate", vibrate);
         
         PendingIntent pendingIntent = PendingIntent.getActivity(
             this, 
@@ -127,7 +129,7 @@ public class AlarmService extends Service {
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
 
-        Notification notification = new NotificationCompat.Builder(this, "ALARM_SERVICE_CHANNEL")
+        Notification notification = new NotificationCompat.Builder(this, "BEAT_THE_CLOCK_ALARM_CHANNEL_V2")
             .setContentTitle(formattedTime) // Alarm time (e.g. "08:30 AM")
             .setContentText("Solve the game to dismiss!")
             .setSubText("Beat the Clock") // Shows in the top-right
@@ -139,7 +141,9 @@ public class AlarmService extends Service {
             .setFullScreenIntent(pendingIntent, true) // Handles lockscreen automatic wake
             .build();
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            startForeground(1001, notification, android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             startForeground(1001, notification, android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK);
         } else {
             startForeground(1001, notification);
@@ -323,12 +327,17 @@ public class AlarmService extends Service {
     private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel serviceChannel = new NotificationChannel(
-                "ALARM_SERVICE_CHANNEL",
-                "Alarm Service Channel",
+                "BEAT_THE_CLOCK_ALARM_CHANNEL_V2",
+                "Alarm Notifications",
                 NotificationManager.IMPORTANCE_HIGH
             );
             serviceChannel.setDescription("Beat the Clock Alarm sound service");
             serviceChannel.setSound(null, null); // Sound played by MediaPlayer instead
+            serviceChannel.setBypassDnd(true);
+            serviceChannel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                serviceChannel.setAllowBubbles(true);
+            }
             NotificationManager manager = getSystemService(NotificationManager.class);
             if (manager != null) {
                 manager.createNotificationChannel(serviceChannel);
