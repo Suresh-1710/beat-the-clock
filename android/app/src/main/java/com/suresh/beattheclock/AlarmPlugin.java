@@ -39,7 +39,7 @@ public class AlarmPlugin extends Plugin {
             intent.putExtra("vibrate", vibrate != null ? vibrate : false);
             intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES); // Forces delivery even if app is closed/force-stopped!
 
-            int requestCode = Integer.parseInt(id.substring(Math.max(0, id.length() - 6)));
+            int requestCode = Math.abs(id.hashCode());
 
             PendingIntent pendingIntent = PendingIntent.getBroadcast(
                 context, 
@@ -100,7 +100,7 @@ public class AlarmPlugin extends Plugin {
             AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
 
             Intent intent = new Intent(context, AlarmReceiver.class);
-            int requestCode = Integer.parseInt(id.substring(Math.max(0, id.length() - 6)));
+            int requestCode = Math.abs(id.hashCode());
 
             PendingIntent pendingIntent = PendingIntent.getBroadcast(
                 context, 

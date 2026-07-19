@@ -1722,7 +1722,7 @@ function checkAppMode() {
 ════════════════════════════════════ */
 async function scheduleLocalNotification(alarmObj) {
   // 1. Schedule exact Android OS AlarmManager event
-  if (window.Capacitor && window.Capacitor.isPluginAvailable('AlarmPlugin')) {
+  if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.AlarmPlugin) {
     const { AlarmPlugin } = window.Capacitor.Plugins;
     AlarmPlugin.setAlarm({ id: alarmObj.id, time: alarmObj.time, vibrate: alarmObj.vibrate }).then((res) => {
       console.log('[Capacitor] Scheduled Android AlarmManager for:', alarmObj.timeStr, res);
@@ -1770,7 +1770,7 @@ async function scheduleLocalNotification(alarmObj) {
 
 async function cancelLocalNotification(alarmId) {
   // 1. Cancel exact Android OS AlarmManager event
-  if (window.Capacitor && window.Capacitor.isPluginAvailable('AlarmPlugin')) {
+  if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.AlarmPlugin) {
     const { AlarmPlugin } = window.Capacitor.Plugins;
     AlarmPlugin.cancelAlarm({ id: alarmId }).then((res) => {
       console.log('[Capacitor] Cancelled Android AlarmManager for ID:', alarmId, res);

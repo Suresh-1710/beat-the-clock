@@ -29,6 +29,7 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        registerPlugin(AlarmPlugin.class);
         super.onCreate(savedInstanceState);
         
         // Turn screen on and show over lock screen
