@@ -135,6 +135,7 @@ public class AlarmService extends Service {
             .setSubText("Beat the Clock") // Shows in the top-right
             .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
             .setContentIntent(pendingIntent)
+            .addAction(android.R.drawable.ic_media_play, "🎮 Solve Challenge", pendingIntent)
             .setOngoing(true)
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setCategory(NotificationCompat.CATEGORY_ALARM)

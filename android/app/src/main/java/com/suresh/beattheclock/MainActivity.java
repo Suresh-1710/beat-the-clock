@@ -105,6 +105,18 @@ public class MainActivity extends BridgeActivity {
                 }
             }
         }
+
+        // 5. Check Exact Alarm Permission (Android 12+ / API 31+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+            if (alarmManager != null && !alarmManager.canScheduleExactAlarms()) {
+                try {
+                    Intent intent = new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
+                    intent.setData(Uri.parse("package:" + getPackageName()));
+                    startActivity(intent);
+                } catch (Exception e) {}
+            }
+        }
     }
 
     @Override
@@ -188,6 +200,7 @@ public class MainActivity extends BridgeActivity {
             if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN || 
                 keyCode == KeyEvent.KEYCODE_VOLUME_UP || 
                 keyCode == KeyEvent.KEYCODE_VOLUME_MUTE) {
+                forceMaxVolume(); // Re-force max volume on keypress
                 return true; // Consume key event silently (prevents OS from changing volume or showing volume slider)
             }
         }
@@ -200,6 +213,8 @@ public class MainActivity extends BridgeActivity {
             if (audioManager != null) {
                 int maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
                 audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, maxVolume, 0);
+                int maxAlarmVol = audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM);
+                audioManager.setStreamVolume(AudioManager.STREAM_ALARM, maxAlarmVol, 0);
             }
         } catch (Exception e) {
             android.util.Log.e("MainActivity", "Failed to force max volume: " + e.getMessage());
