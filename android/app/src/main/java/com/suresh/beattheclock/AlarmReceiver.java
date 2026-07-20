@@ -13,7 +13,7 @@ public class AlarmReceiver extends BroadcastReceiver {
         String alarmTime = intent.getStringExtra("alarmTime");
         boolean vibrate = intent.getBooleanExtra("vibrate", false);
 
-        // Wake screen using WakeLock
+        // 1. Wake CPU / Screen backlight using WakeLock
         try {
             PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
             if (pm != null) {
@@ -25,7 +25,23 @@ public class AlarmReceiver extends BroadcastReceiver {
             }
         } catch (Exception e) {}
 
-        // Launch MainActivity directly
+        // 2. ALWAYS start the native AlarmService foreground sound & vibration service FIRST
+        Intent serviceIntent = new Intent(context, AlarmService.class);
+        serviceIntent.putExtra("alarmId", alarmId);
+        serviceIntent.putExtra("alarmTime", alarmTime);
+        serviceIntent.putExtra("vibrate", vibrate);
+
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(serviceIntent);
+            } else {
+                context.startService(serviceIntent);
+            }
+        } catch (Exception e) {
+            android.util.Log.e("AlarmReceiver", "Failed to start AlarmService: " + e.getMessage());
+        }
+
+        // 3. Try launching MainActivity directly as well
         Intent launchIntent = new Intent(context, MainActivity.class);
         launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         launchIntent.putExtra("alarmId", alarmId);
@@ -35,19 +51,7 @@ public class AlarmReceiver extends BroadcastReceiver {
         try {
             context.startActivity(launchIntent);
         } catch (Exception e) {
-            android.util.Log.e("AlarmReceiver", "Failed to start MainActivity directly, falling back to Service: " + e.getMessage());
-            
-            // Fallback: start foreground service directly
-            Intent serviceIntent = new Intent(context, AlarmService.class);
-            serviceIntent.putExtra("alarmId", alarmId);
-            serviceIntent.putExtra("alarmTime", alarmTime);
-            serviceIntent.putExtra("vibrate", vibrate);
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(serviceIntent);
-            } else {
-                context.startService(serviceIntent);
-            }
+            android.util.Log.e("AlarmReceiver", "Failed to start MainActivity directly: " + e.getMessage());
         }
     }
 }

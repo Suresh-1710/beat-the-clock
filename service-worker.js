@@ -1,4 +1,4 @@
-const CACHE_NAME = 'beat-the-clock-v44';
+const CACHE_NAME = 'beat-the-clock-v45';
 const ASSETS = [
   './',
   './index.html',
