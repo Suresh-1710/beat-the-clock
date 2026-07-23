@@ -52,12 +52,24 @@ public class AlarmService extends Service {
         vibrator = (android.os.Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
     }
 
+    private static String activeAlarmId = null;
+    private static String activeAlarmTime = null;
+    private static boolean activeVibrate = false;
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         String alarmId = intent != null ? intent.getStringExtra("alarmId") : "";
         String alarmTime = intent != null ? intent.getStringExtra("alarmTime") : "";
         boolean vibrate = intent != null && intent.getBooleanExtra("vibrate", false);
         isRinging = true;
+
+        if (alarmId != null && !alarmId.isEmpty() && !alarmId.equals("restart")) {
+            activeAlarmId = alarmId;
+        }
+        if (alarmTime != null && !alarmTime.isEmpty()) {
+            activeAlarmTime = alarmTime;
+        }
+        activeVibrate = vibrate;
 
         // 0.5 Register MediaSession to intercept hardware volume keys globally
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -271,14 +283,17 @@ public class AlarmService extends Service {
     @Override
     public void onTaskRemoved(Intent rootIntent) {
         if (isRinging) {
-            // Send broadcast to AlarmReceiver to restart service safely on swipe-close
+            String targetId = activeAlarmId != null ? activeAlarmId : "1";
             Intent restartIntent = new Intent(getApplicationContext(), AlarmReceiver.class);
-            restartIntent.putExtra("alarmId", "restart");
-            restartIntent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES); // Bypasses stopped-app constraints
+            restartIntent.putExtra("alarmId", targetId);
+            restartIntent.putExtra("alarmTime", activeAlarmTime);
+            restartIntent.putExtra("vibrate", activeVibrate);
+            restartIntent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
             
+            int requestCode = Math.abs(targetId.hashCode());
             PendingIntent pendingIntent = PendingIntent.getBroadcast(
                 getApplicationContext(), 
-                9999, 
+                requestCode, 
                 restartIntent, 
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
             );
@@ -306,7 +321,6 @@ public class AlarmService extends Service {
                         );
                     }
                 } catch (Exception e) {
-                    // Fallback to basic elapsed alarm wakeup if alarm clock registry fails
                     try {
                         alarmService.set(
                             AlarmManager.ELAPSED_REALTIME_WAKEUP, 

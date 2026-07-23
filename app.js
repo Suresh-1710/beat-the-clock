@@ -1805,7 +1805,10 @@ function initCapacitorPlugins() {
   // Define global receiver for Java AlarmManager triggers to wake webview
   window.triggerAlarmFromJava = function(alarmId) {
     console.log('[Java Trigger] OS Alarm triggered! ID:', alarmId);
-    const match = alarms.find(a => String(a.id) === String(alarmId));
+    let match = alarms.find(a => String(a.id) === String(alarmId));
+    if (!match) {
+      match = alarms.find(a => a.enabled) || alarms[0];
+    }
     if (match && !isAlarmRinging) {
       match.ringing = true;
       triggerAlarm(match);
